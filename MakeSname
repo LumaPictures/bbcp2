@@ -46,13 +46,16 @@ elif FileThere x $UNAMF; then
      MTNAME=`$UNAMF -m`
   fi
 
+
 # Compute the basic release number
 #
     RELNUM=`echo $RLNAME | /usr/bin/awk -F\. '{print $1$2}'`
 
-# If the AFS fs command exists, then this becomes the system name
-#
-    if FileThere x $AFSFS; then
+
+    if [ x$DEST_SYSNAME != x ] ; then
+        SYSNAME=$DEST_SYSNAME
+  elif FileThere x $AFSFS; then
+       # If the AFS fs command exists, then this becomes the system name
        SYSNAME=`$AFSFS sysname | /usr/bin/awk -F\' '{print $2}'`
        if [ $SYSNAME = i386_rhel40 ]; then
           if [ "x$MTNAME" = "xx86_64" ]; then
