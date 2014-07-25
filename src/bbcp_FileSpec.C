@@ -33,12 +33,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
 #include "bbcp_Config.h"
 #include "bbcp_Emsg.h"
 #include "bbcp_FileSpec.h"
 #include "bbcp_FileSystem.h"
 #include "bbcp_FS_Unix.h"
 #include "bbcp_Pthread.h"
+#include "bbcp_Set.h"
 
 /******************************************************************************/
 /*                      E x t e r n a l   O b j e c t s                       */
@@ -52,12 +54,94 @@ extern bbcp_Config   bbcp_Config;
 
 // <seqno> <fnode> <inode> <mode> <size> <acctime> <modtime> <group> <fname>
 //
-#define bbcp_ENFMT "%d %c %lld %o %lld %lx %lx %s %s\n"
-#define bbcp_DEFMT "%d %c %lld %o %lld %lx %lx %31s %1025s"
-#define bbcp_DEGMT "%d %c %Ld  %o %Ld  %lx %lx %31s %1025s"
+#define bbcp_ENFMT "%d %c %lld %o %lld %lx %lx %s %s%s%s\n"
+#define bbcp_DEFMT "%d %c %lld %o %lld %lx %lx %31s %2054s"
+#define bbcp_DEGMT "%d %c %Ld  %o %Ld  %lx %lx %31s %2054s"
 
 #define SpaceAlt 0x1a
+
+int bbcp_FileSpec::trimDir = 0;
+
+namespace
+{
+bbcp_Set *pathSet = 0;
+
+bbcp_FileSpec* lastp = 0;
+};
   
+/******************************************************************************/
+/*                     T h r e a d   I n t e r f a c e s                      */
+/******************************************************************************/
+
+extern "C"
+{
+void *bbcp_FileSpecIndex(void *pp)
+{
+   static int negVal = -1;
+   bbcp_FileSpec  *fP = bbcp_Config.srcSpec;
+   char xBuff[128];
+   time_t tNow, xMsg = time(0)+bbcp_Config.Progint;
+   int numD = 0, numF = 0, numL = 0, slOpt;
+   int Blab = (bbcp_Config.Options & bbcp_VERBOSE) || bbcp_Config.Progint;
+   bool aOK = true;
+
+// If we are following symlinks then we need to allocate an unordered set
+// to keep track of them to prevent copying self-referential trees. In any
+// case, establish the symlink processing option.
+//
+        if (bbcp_Config.Options & bbcp_SLFOLLOW)
+           {slOpt = 0; pathSet = new bbcp_Set();}
+   else if (bbcp_Config.Options & bbcp_SLKEEP) slOpt = -1;
+   else slOpt = 1;
+
+// Set lastp to the last node in the list
+//
+   for (lastp = bbcp_Config.srcSpec; lastp->next != NULL; lastp = lastp->next)
+      ; // nothing to do -- just setting lastp
+
+// Extend all directories with the files therein
+//
+   if (Blab) bbcp_Fmsg("Dirlist", "Indexing files to be copied...");
+   while(fP && aOK)
+        {if ('d' == fP->Info.Otype)
+            {numD++; aOK = fP->ExtendFileSpec(numF, numL, slOpt);}
+         fP = fP->next;
+         if (bbcp_Config.Progint && (tNow = time(0)) >= xMsg)
+            {sprintf(xBuff, "%d file%s and %d link%s in %d director%s so far...",
+                     numF, (numF == 1 ? "" : "s"),
+                     numL, (numL == 1 ? "" : "s"),
+                     numD, (numD == 1 ? "y": "ies"));
+             bbcp_Fmsg("Dirlist", "Found", xBuff);
+             xMsg = tNow+bbcp_Config.Progint;
+            }
+        }
+
+// Delete the path set if we allocated it
+//
+   if (pathSet) delete pathSet;
+
+// If we have an error, bail out
+//
+   if (!aOK)
+      {bbcp_Fmsg("Source", "Recursive file indexing failed!");
+       return &negVal;
+      }
+
+// Indicate what we found if so wanted
+//
+   if (Blab)
+      {sprintf(xBuff, "%d file%s and %d link%s in %d director%s.",
+               numF, (numF == 1 ? "" : "s"),
+               numL, (numL == 1 ? "" : "s"),
+               numD, (numD == 1 ? "y": "ies"));
+       bbcp_Fmsg("Source", "Copying", xBuff);
+      }
+
+// All done
+//
+   return 0;
+}
+}
 /******************************************************************************/
 /*                               C o m p o s e                                */
 /******************************************************************************/
@@ -84,7 +168,7 @@ int bbcp_FileSpec::Compose(long long did, char *dpath, int dplen, char *fname)
    strcpy(targpath, dpath);
    targetfn = targpath + dplen;
    if (dpath[dplen-1] != '/') {*targetfn = '/'; targetfn++;}
-   strcpy(targetfn, fn);
+   strcpy(targetfn, fn+trimDir);
 
 // Get the current state of the file or directory
 //
@@ -110,6 +194,27 @@ int bbcp_FileSpec::Compose(long long did, char *dpath, int dplen, char *fname)
        DEBUG("Append signature file is " <<targsigf);
       }
    return retc == 0;
+}
+
+/******************************************************************************/
+/*                           C r e a t e _ L i n k                            */
+/******************************************************************************/
+
+int bbcp_FileSpec::Create_Link()
+{
+   int retc;
+
+// Create the path and accept "already exists" errors. Note that we use the
+// temporary creation mode which gaurentees that we can actually place files
+// in the directory. This will later be set to the true mode if it differs.
+//
+   DEBUG("Make link " <<targpath <<" -> " <<Info.SLink);
+   if (retc = FSp->MKLnk(Info.SLink, targpath))
+      return bbcp_Emsg("Create_Link", retc, "creating link", targpath);
+
+// All done
+//
+   return 0;
 }
 
 /******************************************************************************/
@@ -142,7 +247,7 @@ int bbcp_FileSpec::Decode(char *buff, char *xName)
 {
    static const char LwrCase = 0x20;
    char gnbuff[64], *Space;
-   char fnbuff[1032], *fmt = (char *)bbcp_DEFMT;
+   char fnbuff[2056], *fmt = (char *)bbcp_DEFMT;
    int xtry=1, n;
 
 // Decode the specification
@@ -157,6 +262,13 @@ int bbcp_FileSpec::Decode(char *buff, char *xName)
    if (n != 9) 
       {sprintf(fnbuff,"Unable to decode item %d in file specification from",n+1);
        return bbcp_Fmsg("Decode", fnbuff, (xName ? xName : hostname));
+      }
+
+// Prehandle symlinks
+//
+   if (Info.Otype == 'l' || Info.Otype == 'L')
+      {*(fnbuff+Info.size) = 0;
+       Info.SLink = strdup(fnbuff+Info.size+1);
       }
 
 // Set up our structure
@@ -175,6 +287,8 @@ int bbcp_FileSpec::Decode(char *buff, char *xName)
    if (!(Info.Otype & LwrCase))
       {filereqn = fspec2 = strdup(fnbuff); Space = fspec; Info.Otype |= LwrCase;
        while((Space = index(Space, SpaceAlt))) *Space++ = ' ';
+       if (Info.SLink && (Space = index(Info.SLink, SpaceAlt)))
+          do {*Space++ = ' ';} while((Space = index(Space, SpaceAlt)));
       } else filereqn = fspec;
 
 // All done
@@ -189,7 +303,10 @@ int bbcp_FileSpec::Decode(char *buff, char *xName)
 int bbcp_FileSpec::Encode(char *buff, size_t blen)
 {
    static const char UprCase = 0xdf;
+   const char *slSep, *slXeq;
    char grpBuff[64], *Space, *theGrp, Otype = Info.Otype;
+   long long theSize;
+   bool isSL = Info.SLink != 0;
    int n;
 
 // We have postponed handling spaces in file names until encode time. If there
@@ -203,6 +320,13 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
        do {*Space = SpaceAlt;} while((Space = index(Space+1, ' ')));
       }
 
+// If we have symlink data then we need to encode spaces there as well
+//
+   if (isSL && (Space = index(Info.SLink, ' ')))
+      {Otype &= UprCase;
+       do {*Space = SpaceAlt;} while((Space = index(Space+1, ' ')));
+      }
+
 // Convert spaces in the group name to an alternate character
 //
    if ((Space = index(Info.Group, ' ')))
@@ -212,11 +336,16 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
        theGrp = grpBuff;
       } else theGrp = Info.Group;
 
+// Prepare for format
+//
+   if (isSL) {slXeq = Info.SLink; slSep = ":"; theSize = strlen(filereqn);}
+      else   {slXeq = "";         slSep = "";  theSize = Info.size;}
+
 // Format the specification
 //
    n = snprintf(buff, blen, bbcp_ENFMT, seqno, Otype, Info.fileid,
-                Info.mode, Info.size, Info.atime, Info.mtime, theGrp,
-                filereqn);
+                Info.mode, theSize, Info.atime, Info.mtime, theGrp,
+                filereqn, slSep, slXeq);
 
 // Make sure all went well
 //
@@ -229,45 +358,30 @@ int bbcp_FileSpec::Encode(char *buff, size_t blen)
 /*                        E x t e n d F i l e S p e c                         */
 /******************************************************************************/
 
-void bbcp_FileSpec::ExtendFileSpec(bbcp_FileSpec* headp, int &numF)
+bool bbcp_FileSpec::ExtendFileSpec(int &numF, int &numL, int slOpt)
 {
    struct dirent* d;
    bbcp_FileInfo  fInfo;
    bbcp_FileSpec* newp;
-   bbcp_FileSpec* lastp;
-   int            dirFD, pathLen = strlen(pathname);
+   DIR           *dirp;
    char           relative_name[1024], absolute_name[4096];
    struct stat    sbuf;
-   DIR           *dirp;
-
-   // To avoid potentially serious copy loops, if pathname is not a true 
-   // directory, we do not extend it. Eventually, we will recreate symlinks 
-   // in the target node.
-   //
-   if (lstat(pathname,&sbuf) || (sbuf.st_mode & S_IFMT) != S_IFDIR)
-      {if ((sbuf.st_mode & S_IFMT) != S_IFREG) Info.Otype = '?';
-       return;
-      }
-
-   //
-   // Advance lastp to the last node in the list
-   //
-   for (lastp = headp ; lastp->next != NULL ; lastp = lastp->next)
-      ; // nothing to do -- just setting lastp
+   int            dirFD;
+   bool           aOK = true;
 
    // Open the directory as we will need a file descriptor to it. Different
    // operaing systems have different ways of doing this.
    //
 #ifdef SUN
-   if ((dirFD = open(pathname, O_RDONLY)) < 0) return;
-   if (!(dirp = fdopendir(dirFD))) {close(dirFD); return;}
+   if ((dirFD = open(pathname, O_RDONLY)) < 0) return true;
+   if (!(dirp = fdopendir(dirFD))) {close(dirFD); return true;}
 #else
-   if (!(dirp = opendir(pathname))) return;
+   if (!(dirp = opendir(pathname))) return true;
    dirFD = dirfd(dirp);
 #endif
 
    // This loop walks the tree rooted at pathname, adding each file it
-   // finds to the list at headp.
+   // finds to the end of the list pointed to by lastp.
    //
    for (d = readdir(dirp) ; NULL != d ; d = readdir(dirp))
    {
@@ -280,14 +394,29 @@ void bbcp_FileSpec::ExtendFileSpec(bbcp_FileSpec* headp, int &numF)
       //
       snprintf(absolute_name,sizeof(absolute_name),"%s/%s",pathname,d->d_name);
 
-      // Ignore symlinks or entries we can't stat for any reason
+      // Ignore entries we can't stat for any reason
       //
-      if (0 != FSp->Stat(absolute_name, d->d_name, dirFD, 1, &fInfo)) continue;
+      if (0 != FSp->Stat(absolute_name,d->d_name,dirFD,slOpt,&fInfo)) continue;
 
       // Skip anything that isn't a file or a directory here
       //
-      if (fInfo.Otype == 'f') numF++;
-         else if (fInfo.Otype != 'd') continue;
+           if (fInfo.Otype == 'f') numF++;
+      else if (fInfo.Otype == 'l'){if (slOpt >= 0) continue; numL++;}
+      else if (fInfo.Otype != 'd') continue;
+
+      // If we are to monitor self-referential symlinks do so now
+      //
+      if (pathSet && fInfo.Otype == 'd' && fInfo.SLink)
+         {if (!(pathSet->Add(fInfo.SLink)))
+             {bbcp_Fmsg("Extend","symlink loop detected indexing",pathname);
+              aOK = false; break;
+             }
+         }
+
+      // Cleanup our local file info object
+      //
+      if (fInfo.Otype != 'l' && fInfo.SLink)
+         {free(fInfo.SLink); fInfo.SLink = 0;}
 
       // Initialize a new FileSpec object to represent this file
       //
@@ -299,7 +428,7 @@ void bbcp_FileSpec::ExtendFileSpec(bbcp_FileSpec* headp, int &numF)
       newp->pathname = strdup(absolute_name);
       newp->targetsz = 0;
       newp->seqno = lastp->seqno + 1;
-      newp->Info = fInfo; fInfo.Group = 0;
+      newp->Info = fInfo; fInfo.Group = 0; fInfo.SLink = 0;
       newp->FSp = FSp;
       newp->next = NULL;
       lastp->next = newp;
@@ -307,6 +436,7 @@ void bbcp_FileSpec::ExtendFileSpec(bbcp_FileSpec* headp, int &numF)
    }
 
    if (dirp) closedir(dirp); // This also closes the underlying fd
+   return aOK;
 }
 
 /******************************************************************************/
@@ -417,7 +547,7 @@ int bbcp_FileSpec::setMode(mode_t Mode)
 // Set the mode
 //
    if ((retc = FSp->setMode (targpath, Mode)))
-      return bbcp_Emsg("setStat", -retc, "setting mode on", targpath);
+      bbcp_Emsg("setStat", -retc, "setting mode on", targpath);
    return 0;
 }
 
@@ -436,20 +566,32 @@ int bbcp_FileSpec::setStat()
 
 // Set the times, mode, and group
 //
-        if ((retc = FSp->setTimes(targpath, Info.atime, Info.mtime)))
-           act = (char *)"setting time on";
-   else if ((retc = FSp->setMode (targpath, Info.mode)))
-           act = (char *)"setting mode on";
-   else if (Info.Group
-        && (retc = FSp->setGroup (targpath, Info.Group)))
-           act = (char *)"setting group on";
+   if ((retc = FSp->setTimes(targpath, Info.atime, Info.mtime)))
+      act = (char *)"setting time on";
+   if ((retc = FSp->setMode (targpath, Info.mode)))
+      act = (char *)"setting mode on";
+   if (Info.Group) FSp->setGroup (targpath, Info.Group);
 
-// Check if any errors occured
+// Check if any errors occured (we ignore these just like cp/scp does)
 //
-   if (act) return bbcp_Emsg("setStat", -retc, act, targpath);
+   if (act) bbcp_Emsg("setStat", -retc, act, targpath);
    return 0;
 }
   
+/******************************************************************************/
+/*                               s e t T r i m                                */
+/******************************************************************************/
+  
+void bbcp_FileSpec::setTrim()
+{
+
+// Set the length of the prefix triming string
+//
+   trimDir = strlen(fspec);
+   if (fspec[trimDir-1] != '/') trimDir++;
+   delete this;
+}
+
 /******************************************************************************/
 /*                                  S t a t                                   */
 /******************************************************************************/

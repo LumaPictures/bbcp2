@@ -120,6 +120,7 @@ char          csString[44];
 char          ubSpec[4];
 char          upSpec[4];
 
+bbcp_FileSpec  *slkPath;
 bbcp_FileSpec  *srcPath;
 bbcp_FileSpec  *srcSpec;
 bbcp_FileSpec  *srcLast;
@@ -234,6 +235,11 @@ int   Unpipe(char *Opts);
 #define bbcp_DSYNC    0x0000060000000000LL
 
 #define bbcp_IPV4     0x0000400000000000LL
+
+#define bbcp_AUTOMKD  0x0001000000000000LL
+#define bbcp_SLFOLLOW 0x0002000000000000LL
+#define bbcp_SLKEEP   0x0004000000000000LL
+#define bbcp_GROSS    0x0008000000000000LL
 
 #define BBCP_MAXSTREAMS 64
 #define BBCP_MINPMONSEC  1

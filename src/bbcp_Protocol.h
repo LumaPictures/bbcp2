@@ -55,7 +55,7 @@ int    Process(bbcp_Node *Node);
 
 int    Request(bbcp_Node *Node);
 
-       bbcp_Protocol() {Local = 0; Remote = 0; tdir = 0;}
+       bbcp_Protocol() : Local(0), Remote(0), fs_obj(0), tdir(0) {}
       ~bbcp_Protocol() {if (Remote) delete Remote;}
 
 private:
@@ -76,8 +76,8 @@ int   Process_flist();
 int   Process_get();
 int   Process_login(bbcp_Link *Net);
 
-int   Request_exit(int retc);
-int   Request_flist(long long &totsz);
+int   Request_exit(int retc, const char *rmd=0);
+int   Request_flist(long long &totsz, int &numlinks, bool dotrim);
 int   Request_get(bbcp_FileSpec *fp);
 int   Request_login(bbcp_Link *Net);
 

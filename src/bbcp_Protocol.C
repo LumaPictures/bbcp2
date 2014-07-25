@@ -65,50 +65,7 @@ extern bbcp_Network  bbcp_Net;
 
 extern bbcp_Version  bbcp_Version;
 
-/******************************************************************************/
-/*                     T h r e a d   I n t e r f a c e s                      */
-/******************************************************************************/
-
-extern "C"
-{
-void *bbcp_ProtocolLS(void *pp)
-{
-   bbcp_FileSpec  *fP = bbcp_Config.srcSpec;
-   char xBuff[128];
-   time_t tNow, xMsg = time(0)+bbcp_Config.Progint;
-   int numD = 0, numF = 0;
-   int Blab = (bbcp_Config.Options & bbcp_VERBOSE) || bbcp_Config.Progint;
-
-// Extend all directories with the files therein
-//
-   if (Blab) bbcp_Fmsg("Dirlist", "Indexing files to be copied...");
-   while(fP)
-        {if ('d' == fP->Info.Otype)
-            {numD++; fP->ExtendFileSpec(bbcp_Config.srcSpec, numF);}
-         fP = fP->next;
-         if (bbcp_Config.Progint && (tNow = time(0)) >= xMsg)
-            {sprintf(xBuff, "%d file%s in %d director%s so far...",
-                     numF, (numF == 1 ? "" : "s"),
-                     numD, (numD == 1 ? "y": "ies"));
-             bbcp_Fmsg("Dirlist", "Found", xBuff);
-             xMsg = tNow+bbcp_Config.Progint;
-            }
-        }
-
-// Indicate what we found if so wanted
-//
-   if (Blab)
-      {sprintf(xBuff, "%d file%s in %d director%s.",
-               numF, (numF == 1 ? "" : "s"),
-               numD, (numD == 1 ? "y": "ies"));
-       bbcp_Fmsg("Source", "Copying", xBuff);
-      }
-
-// All done
-//
-   return 0;
-}
-}
+extern "C" {extern void *bbcp_FileSpecIndex(void *pp);}
   
 /******************************************************************************/
 /*                              S c h e d u l e                               */
@@ -296,7 +253,7 @@ int bbcp_Protocol::Process(bbcp_Node *Node)
 // This avoids time-outs when large number of files are enumerated.
 //
    if (!NoGo && bbcp_Config.Options & bbcp_RECURSE)
-      if ((rc = bbcp_Thread_Start(bbcp_ProtocolLS, 0, &Tid)) < 0)
+      if ((rc = bbcp_Thread_Start(bbcp_FileSpecIndex, 0, &Tid)) < 0)
          {bbcp_Emsg("Protocol", rc, "starting file enumeration thread.");
           NoGo = 1;
          }
@@ -311,7 +268,8 @@ int bbcp_Protocol::Process(bbcp_Node *Node)
 // file specs (bbcp_Config.srcSpec) is being extended recursively to include
 // all subdirs and their contents. We must wait for the thread to finish.
 //
-   if (!NoGo && bbcp_Config.Options & bbcp_RECURSE) bbcp_Thread_Wait(Tid);
+   if (!NoGo && bbcp_Config.Options & bbcp_RECURSE)
+      NoGo = (bbcp_Thread_Wait(Tid) != 0);
 
 // If there was a fatal error, we can exit now, the remote side will exit
 //
@@ -555,10 +513,12 @@ int bbcp_Protocol::Process_login(bbcp_Link *Net)
 int bbcp_Protocol::Request(bbcp_Node *Node)
 {
    long long totsz=0;
-   int  retc, numfiles, texists;
-   int  outDir = (bbcp_Config.Options & bbcp_OUTDIR) != 0;
    bbcp_FileSpec *fp;
+   const char *dRM = 0;
    char buff[1024];
+   int  retc, numfiles, numlinks, texists;
+   int  outDir = (bbcp_Config.Options & bbcp_OUTDIR) != 0;
+   bool dotrim = false;
 
 // Establish all connections
 //
@@ -566,10 +526,25 @@ int bbcp_Protocol::Request(bbcp_Node *Node)
    ||  Node->getBuffers(1)) return 2;
    Local = Node;
 
+// Determine if the target exists
+//
+   texists = !bbcp_Config.snkSpec->Stat(0);
+   fs_obj  = bbcp_Config.snkSpec->FSys();
+
+// If the target does not exist and we are doing a recursive copy, then we
+// presume that the target should be a directory and we should create it.
+//
+   if (!texists && (outDir || (bbcp_Config.Options & bbcp_RECURSE))
+   &&  (bbcp_Config.Options & bbcp_AUTOMKD))
+      {retc = fs_obj->MKDir(bbcp_Config.snkSpec->pathname, bbcp_Config.ModeDC);
+       if (retc) Request_exit(retc);
+       texists = !bbcp_Config.snkSpec->Stat(0);
+       dotrim = !outDir; dRM = bbcp_Config.snkSpec->pathname;
+      }
+
 // Establish the target directory
 //
-   if ((texists = !bbcp_Config.snkSpec->Stat(0))
-   &&  bbcp_Config.snkSpec->Info.Otype == 'd')
+   if (texists && bbcp_Config.snkSpec->Info.Otype == 'd')
        tdir = bbcp_Config.snkSpec->pathname;
       else {int plen;
             if (plen = bbcp_Config.snkSpec->filename -
@@ -581,7 +556,6 @@ int bbcp_Protocol::Request(bbcp_Node *Node)
 
 // Generate a target directory ID. This will also uncover a missing directory.
 //
-   fs_obj = bbcp_Config.snkSpec->FSys();
    if (texists &&  bbcp_Config.snkSpec->Info.Otype == 'd')
       tdir_id = bbcp_Config.snkSpec->Info.fileid;
       else {bbcp_FileInfo Tinfo;
@@ -589,19 +563,23 @@ int bbcp_Protocol::Request(bbcp_Node *Node)
             && Tinfo.Otype != 'd') && outDir) retc = ENOTDIR;
             if (retc) {bbcp_Fmsg("Request","Target directory",
                                  bbcp_Config.snkSpec->pathname,"not found");
-                       return Request_exit(2);
+                       return Request_exit(2, dRM);
                       }
             tdir_id = Tinfo.fileid;
            }
 
 // The first step is to perform an flist to get the list of files
 //
-   if ((numfiles = Request_flist(totsz)) <= 0) 
-      return Request_exit((numfiles  < 0 ? 22 : 0));
+   numfiles = Request_flist(totsz, numlinks, dotrim);
+   if (numfiles  < 0) return Request_exit(22, dRM);
+   if (numfiles == 0 && numlinks == 0 && !(bbcp_Config.Options & bbcp_GROSS))
+      {cout <<"200 End: 0 0" <<endl;
+       return Request_exit(0, dRM);
+      }
 
 // If we have a number files, the target had better be a directory
 //
-   if (numfiles > 1 || outDir)
+   if (numfiles > 1 || numlinks > 1 || outDir)
       {if (!texists)
           {bbcp_Fmsg("Request", "Target directory",
                      bbcp_Config.snkSpec->pathname, "not found.");
@@ -617,11 +595,12 @@ int bbcp_Protocol::Request(bbcp_Node *Node)
 
 // Make sure we have enough space in the filesystem
 //
-   DEBUG("Preparing to copy " <<numfiles <<" file(s); bytes=" <<totsz);
+   DEBUG("Preparing to copy " <<numlinks <<" links(s) "
+         <<numfiles <<" file(s); bytes=" <<totsz);
    if (!(bbcp_Config.Options & bbcp_NOSPCHK) && !fs_obj->Enough(totsz, numfiles))
       {bbcp_Fmsg("Sink", "Insufficient space to copy all the files from",
                                Remote->NodeName());
-       return Request_exit(28);
+       return Request_exit(28, dRM);
       }
 
 // Create all of the required directories
@@ -629,6 +608,13 @@ int bbcp_Protocol::Request(bbcp_Node *Node)
    retc = 0;
    fp = bbcp_Config.srcPath;
    while(fp && !(retc = fp->Create_Path()))  fp = fp->next;
+   if (retc) return Request_exit(retc);
+
+// Create all of the required symlinks
+//
+   retc = 0;
+   fp = bbcp_Config.slkPath;
+   while(fp && !(retc = fp->Create_Link()))  fp = fp->next;
    if (retc) return Request_exit(retc);
 
 // Get each source file
@@ -643,9 +629,9 @@ int bbcp_Protocol::Request(bbcp_Node *Node)
 //
    if ((fp = bbcp_Config.srcPath))
       {if (bbcp_Config.Options & bbcp_PCOPY)
-          {while(fp && fp->setStat()) fp = fp->next;}
+          {while(fp && fp->setStat() == 0) fp = fp->next;}
           else if (bbcp_Config.ModeD != bbcp_Config.ModeDC)
-                  {while(fp && fp->setMode(bbcp_Config.ModeD)) fp = fp->next;}
+                  {while(fp && fp->setMode(bbcp_Config.ModeD) == 0) fp = fp->next;}
       }
 
 // Report back how many files and bytes were received
@@ -664,10 +650,14 @@ int bbcp_Protocol::Request(bbcp_Node *Node)
 /*                          R e q u e s t _ e x i t                           */
 /******************************************************************************/
   
-int bbcp_Protocol::Request_exit(int retc)
+int bbcp_Protocol::Request_exit(int retc, const char *dRM)
 {
     char buff[256];
     int blen;
+
+// Remove any auto-created directory if need bo
+//
+   if (dRM && fs_obj) fs_obj->RM(dRM);
 
 // Send the exit command (we don't care how it completes)
 //
@@ -684,12 +674,12 @@ int bbcp_Protocol::Request_exit(int retc)
 /*                         R e q u e s t _ f l i s t                          */
 /******************************************************************************/
   
-int bbcp_Protocol::Request_flist(long long &totsz)
+int bbcp_Protocol::Request_flist(long long &totsz, int &numlinks, bool dotrim)
 {
    int retc, noteol, numfiles = 0;
    char *lp, *tfn;;
    int   tdln = strlen(tdir);
-   bbcp_FileSpec *fp, *lastfp = 0, *lastdp = 0;
+   bbcp_FileSpec *fp, *lastfp = 0, *lastdp = 0, *lastsp = 0;
    const char flcmd[] = "flist\n";
    const int  flcsz   = sizeof(flcmd)-1;
 
@@ -704,18 +694,27 @@ int bbcp_Protocol::Request_flist(long long &totsz)
 
 // Now start getting all of the files to be copied
 //
+   numlinks = 0;
    while((lp = Remote->GetLine()) && (noteol = strcmp(lp, "eol")))
         {fp = new bbcp_FileSpec(fs_obj, Remote->NodeName());
+//       cerr <<"Get flist: " <<lp <<endl;
          if (fp->Decode(lp)) {numfiles = -1; break;}
 
                if (fp->Compose(tdir_id, tdir, tdln, tfn)
                &&  (retc = fp->Xfr_Done()))
                   {delete fp; if (retc < 0) {numfiles = -1; break;}}
           else if (fp->Info.Otype == 'd')
-                    {if (lastdp) lastdp->next = fp;
-                        else bbcp_Config.srcPath = fp;
-                     lastdp = fp;
-                    }
+                  {if (dotrim) fp->setTrim();
+                      else {if (lastdp) lastdp->next = fp;
+                               else bbcp_Config.srcPath = fp;
+                            lastdp = fp;
+                           }
+                  }
+          else if (fp->Info.Otype == 'l')
+                  {if (lastsp) lastsp->next = fp;
+                      else bbcp_Config.slkPath = fp;
+                   lastdp = fp; numlinks++;
+                  }
 /*PIPE*/  else if (fp->Info.Otype == 'f' || fp->Info.Otype == 'p')
                   {numfiles++;
                    totsz += fp->Info.size;
@@ -723,6 +722,7 @@ int bbcp_Protocol::Request_flist(long long &totsz)
                    else bbcp_Config.srcSpec = fp;
                    lastfp = fp;
                   }
+          dotrim = false;
         }
 
 // Flush the input queue if need be

@@ -46,6 +46,10 @@ elif FileThere x $UNAMF; then
      MTNAME=`$UNAMF -m`
   fi
 
+# Compute the basic release number
+#
+    RELNUM=`echo $RLNAME | /usr/bin/awk -F\. '{print $1$2}'`
+
 # If the AFS fs command exists, then this becomes the system name
 #
     if FileThere x $AFSFS; then
@@ -61,11 +65,11 @@ elif FileThere x $UNAMF; then
        if [ $MTNAME = i86pc ]; then
           SYSNAME=sunx86
        else
-          case $RLNAME in 5.6) RFX=56 ;; 5.7) RFX=57 ;; 5.8) RFX=58 ;; 5.9) RFX=59 ;; esac
+          case $RLNAME in 5.9) RFX=59 ;; 5.10) RFX=510 ;; 5.11) RFX=511 ;; esac
           SYSNAME=sun4x_$RFX
        fi
   elif [ $OSNAME = Linux ]; then
-       case $RLNAME in 2.4*) RFX=24 ;; 2.6*) RFX=26 ;; esac
+       case $RLNAME in 2.4*) RFX=24 ;; 2.6*) RFX=26 ;; 2.7*) RFX=27 ;; 3.1*) RFX=31 ;; esac
        PFX=i386
        case $MTNAME in i*) PFX=i386 ;; x86_64) PFX=amd64 ;; esac
        SYSNAME=${PFX}_linux$RFX
@@ -93,4 +97,8 @@ elif FileThere x $UNAMF; then
       /bin/mkdir -p ../bin/$SYSNAME
   fi
 
-  echo $SYSNAME
+  if [ x$1 = x-r ]; then
+     echo $RELNUM
+  else
+     echo $SYSNAME
+  fi

@@ -50,6 +50,8 @@ bbcp_File *Open(const char *fn, int opts, int mode=0, const char *fa=0);
 
 int        MKDir(const char *path, mode_t mode);
 
+int        MKLnk(const char *ldata, const char *path);
+
 int        RM(const char *path);
 
 int        setGroup(const char *path, const char *Group);

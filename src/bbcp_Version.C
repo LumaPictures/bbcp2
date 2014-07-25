@@ -1,6 +1,6 @@
 /******************************************************************************/
 /*                                                                            */
-/*                        b b c p _ V e r s i o n . h                         */
+/*                        b b c p _ V e r s i o n . C                         */
 /*                                                                            */
 /*(c) 2010-14 by the Board of Trustees of the Leland Stanford, Jr., University*//*      All Rights Reserved. Scroll to end for Terms and Conditions of use    */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
@@ -49,7 +49,7 @@ bbcp_Version::bbcp_Version()
 {
 Copyright = "(c) 2002-2014 by the Board of Trustees of the Leland Stanford, Jr., University";
 Author    = "Andrew Hanushevsky";
-Version   = "Version: 14.04.14.00.1";
+Version   = "Version: 14.07.01.00.0";
 //           0123456789
 VData     = Version+9;
 };

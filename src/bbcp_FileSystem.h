@@ -27,6 +27,7 @@
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
   
+#include <errno.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -40,11 +41,14 @@ struct bbcp_FileInfo
        time_t    mtime;     // Modification time
        time_t    ctime;     // Create time
        char     *Group;     // -> Group name
-       char      Otype;     // 'd' | 'f' | 'p' | '?'
+       char     *SLink;     // -> Symlink contents
+       char      Otype;     // 'd' | 'f' | 'l' | 'p' | '?'
        char      Xtype;     // 'x' | 0
 
-       bbcp_FileInfo() : Group(0), Otype('?'), Xtype(0) {}
-      ~bbcp_FileInfo() {if (Group) free(Group);}
+       bbcp_FileInfo() : Group(0), SLink(0), Otype('?'), Xtype(0) {}
+      ~bbcp_FileInfo() {if (Group) free(Group);
+                        if (SLink) free(SLink);
+                       }
 };
 
 class bbcp_File;
@@ -95,6 +99,12 @@ virtual bbcp_File *Open(const char *fn,int opts,int mode=0,const char *fa=0)=0;
 // Otherwise returns a zero.
 //
 virtual int        MKDir(const char *path, mode_t mode)=0;
+
+// MKLnk creates a symboliv link identified by path whose contents contains
+// ldata. Upon error, returns -errno.
+// Otherwise returns a zero.
+//
+virtual int        MKLnk(const char *ldata, const char *path) {return -ENOTSUP;}
 
 // Returns the path bound to the filesystem
 //

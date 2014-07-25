@@ -48,8 +48,18 @@
 #include "bbcp_System.h"
 #include "bbcp_Debug.h"
 
+/******************************************************************************/
+/*                         L o c a l   D e f i n e s                          */
+/******************************************************************************/
+  
 #if defined(MACOS) || defined (AIX)
 #define S_IAMB      0x1FF
+#endif
+
+#if defined(SUN) && RELEASE < 511
+#define READLINK(fd, dent, path, buff, blen) readlink(path,buff,blen)
+#else
+#define READLINK(fd, dent, path, buff, blen) readlinkat(fd,dent,buff,blen)
 #endif
 
 /******************************************************************************/
@@ -176,6 +186,17 @@ int bbcp_FS_Unix::MKDir(const char *path, mode_t mode)
 
     return 0;
 }
+
+/******************************************************************************/
+/*                                 M K L n k                                  */
+/******************************************************************************/
+
+int bbcp_FS_Unix::MKLnk(const char *ldata, const char *path)
+{
+    if (symlink(ldata, path)) return -errno;
+
+    return 0;
+}
   
 /******************************************************************************/
 /*                                  O p e n                                   */
@@ -224,7 +245,7 @@ bbcp_File *bbcp_FS_Unix::Open(const char *fn, int opts, int mode, const char *fa
   
 int bbcp_FS_Unix::RM(const char *path)
 {
-    if (!unlink(path)) return 0;
+    if (!remove(path)) return 0;
     return -errno;
 }
 
@@ -289,25 +310,39 @@ int bbcp_FS_Unix::Stat(const char *path, bbcp_FileInfo *sbuff)
 /******************************************************************************/
   
 int bbcp_FS_Unix::Stat(const char *path, const char *dent, int fd,
-                       int nolnks, bbcp_FileInfo *sbuff)
+                       int chklnks, bbcp_FileInfo *sbuff)
 {
    struct stat xbuff;
+   char lbuff[2048];
+   int n;
 
 // Perform the stat function
 //
 #ifdef AT_SYMLINK_NOFOLLOW
-   if (fstatat(fd, dent, &xbuff, (nolnks?AT_SYMLINK_NOFOLLOW:0))) return -errno;
-   if (nolnks && (xbuff.st_mode & S_IFMT) == S_IFLNK) return -ENOENT;
+   if (fstatat(fd, dent, &xbuff, AT_SYMLINK_NOFOLLOW)) return -errno;
+   if ((xbuff.st_mode & S_IFMT) != S_IFLNK)
+      return (sbuff ? Stat(xbuff, sbuff) : 0);
+   if (chklnks > 0) return -ENOENT;
    if (!sbuff) return 0;
+   if ((n = READLINK(fd,dent,path,lbuff,sizeof(lbuff)-1)) < 0) return -errno;
+// if ((n = readlinkat(fd, dent, lbuff, sizeof(lbuff)-1)) < 0) return -errno;
+   lbuff[n] = 0;
+   if(sbuff->SLink) free(sbuff->SLink);
+   sbuff->SLink = strdup(lbuff);
+   if (!chklnks && fstatat(fd, dent, &xbuff, 0)) return -errno;
    return Stat(xbuff, sbuff);
 #else
-   if (nolnks)
-      {if (lstat(path, &xbuff)) return -errno;
-       if ((xbuff.st_mode & S_IFMT) == S_IFLNK) return -ENOENT;
-          else return Stat(xbuff, sbuff);
-      }
+   if (lstat(path, &xbuff)) return -errno;
+   if ((xbuff.st_mode & S_IFMT) != S_IFLNK)
+      return (sbuff ? Stat(xbuff, sbuff) : 0);
+   if (chklnks > 0) return -ENOENT;
    if (!sbuff) return 0;
-   return Stat(path, sbuff);
+   if ((n = readlink(path, lbuff, sizeof(lbuff)-1)) < 0) return -errno;
+   lbuff[n] = 0;
+   if(sbuff->SLink) free(sbuff->SLink);
+   sbuff->SLink = strdup(lbuff);
+   if (!chklnks && stat(path, &xbuff)) return -errno;
+   return Stat(xbuff, sbuff);
 #endif
 }
 
@@ -334,6 +369,8 @@ int bbcp_FS_Unix::Stat(struct stat &xbuff, bbcp_FileInfo *sbuff)
                                     }
    else if (S_ISFIFO(xbuff.st_mode)) sbuff->Otype = 'p';
    else if (S_ISDIR( xbuff.st_mode)) sbuff->Otype = 'd';
+   else if ((xbuff.st_mode & S_IFMT) == S_IFLNK)
+                                     sbuff->Otype = 'l';
    else                              sbuff->Otype = '?';
 
 // Convert gid to a group name

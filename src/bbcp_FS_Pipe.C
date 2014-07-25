@@ -120,6 +120,7 @@ bbcp_File *bbcp_FS_Pipe::Exec(const char *prog, const char *fa, int opts)
    rc = errno;
    write(gildes[1], &rc, sizeof(rc));
    exit(255);
+   return 0;
 }
   
 /******************************************************************************/

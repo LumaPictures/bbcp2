@@ -1,10 +1,10 @@
-#ifndef __BBCP_FS_NULL_H__
-#define __BBCP_FS_NULL_H__
+#ifndef _BBCP_SET_H_
+#define _BBCP_SET_H_
 /******************************************************************************/
 /*                                                                            */
-/*                        b b c p _ F S _ N u l l . h                         */
+/*                            b b c p _ S e t . h                             */
 /*                                                                            */
-/*(c) 2002-14 by the Board of Trustees of the Leland Stanford, Jr., University*//*      All Rights Reserved. See bbcp_Version.C for complete License Terms    *//*                            All Rights Reserved                             */
+/*(c) 2010-14 by the Board of Trustees of the Leland Stanford, Jr., University*//*      All Rights Reserved. See bbcp_Version.C for complete License Terms    *//*                            All Rights Reserved                             */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /*                                                                            */
@@ -26,45 +26,33 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
-#include <errno.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include "bbcp_FileSystem.h"
 
-class bbcp_FS_Null : public bbcp_FileSystem
+#include <stdlib.h>
+#include <string.h>
+
+class bbcp_Set
 {
 public:
 
-int        Applicable(const char *path);
+bool Add(const char *key);
 
-int        Enough(long long bytes, int numfiles=1) {return 1;}
+     bbcp_Set(int slots=509);
 
-long long  getSize(int fd, long long *bsz=0);
+    ~bbcp_Set();
 
-bbcp_File *Open(const char *fn, int opts, int mode=0, const char *fa=0);
+private:
 
-int        MKDir(const char *path, mode_t mode) {return 0;}
+struct SetItem
+{
+SetItem *next;
+char    *key;
 
-int        MKLnk(const char *ldata, const char *path) {return 0;}
+         SetItem(const char *kval, SetItem *base)
+                : next(base), key(strdup(kval)) {}
+        ~SetItem() {free(key);}
+};
 
-int        RM(const char *path) {return 0;}
-
-int        setGroup(const char *path, const char *Group) {return 0;}
-
-int        setMode(const char *path, mode_t mode) {return 0;}
-
-int        setTimes(const char *path, time_t atime, time_t mtime) {return 0;}
-
-int        Stat(const char *path, bbcp_FileInfo *finfo=0);
-
-int        Stat(const char *path, const char *dent, int fd,
-                int nolnks=1, bbcp_FileInfo *finfo=0) {return -ENOENT;}
-
-           bbcp_FS_Null() {}
-          ~bbcp_FS_Null() {}
-
-protected:
+SetItem     **SetTab;
+unsigned int  Slots;
 };
 #endif

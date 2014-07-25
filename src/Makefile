@@ -103,6 +103,7 @@ SOURCE =      \
      bbcp_Protocol.C \
      bbcp_Pthread.C \
      bbcp_RTCopy.C \
+     bbcp_Set.C \
      bbcp_Stream.C \
      bbcp_System.C \
      bbcp_Timer.C \
@@ -141,6 +142,7 @@ OBJECT =      \
      $(OBJDIR)/bbcp_Protocol.o \
      $(OBJDIR)/bbcp_Pthread.o \
      $(OBJDIR)/bbcp_RTCopy.o \
+     $(OBJDIR)/bbcp_Set.o \
      $(OBJDIR)/bbcp_Stream.o \
      $(OBJDIR)/bbcp_System.o \
      $(OBJDIR)/bbcp_Timer.o \
@@ -152,7 +154,7 @@ TARGET  = $(BINDIR)/bbcp
 
 
 all:
-	@make `uname` OSVER=`../MakeSname` 
+	@make `uname` OSVER=`../MakeSname` RELEASE=`../MakeSname -r`
 	@echo Make done.
 
 doitall: $(TARGET)
@@ -203,7 +205,7 @@ makeLinuxi386:
 	LIBS="$(LNXLIBS32)"
 
 makeLinuxx86_64:
-	@make $(MKPARMS)  \
+	@make $(MKPARMS) RR=$(RELNUM) \
 	CC=$(LNXCC) \
 	BB=$(LNXcc) \
 	CFLAGS="$(ENVCFLAGS) $(LNXOPT)" \
@@ -233,26 +235,26 @@ UNICOS/mp:
 	LIBS="$(LNXLIBS)"
 
 SunOS:
-	@make $(MKPARMS)  \
+	@make $(MKPARMS) \
 	CC=$(SUNCC) \
 	BB=$(SUNcc) \
-	CFLAGS="$(ENVCFLAGS) $(SUNOPT) $(OPT)" \
+	CFLAGS="$(ENVCFLAGS) $(SUNOPT) $(OPT) -DRELEASE=$(RELEASE)" \
 	INCLUDE="$(ENVINCLUDE)" \
 	LIBS="$(SUNLIBS)"
 
 SunX86:
-	@make $(MKPARMS)  \
+	@make $(MKPARMS) \
 	CC=$(S86CC) \
 	BB=$(S86cc) \
-	CFLAGS="$(ENVCFLAGS) $(S86OPT) $(OPT)" \
+	CFLAGS="$(ENVCFLAGS) $(S86OPT) $(OPT) -DRELEASE=$(RELEASE)" \
 	INCLUDE="$(ENVINCLUDE)" \
 	LIBS="$(SUNLIBS)"
 
 Sungcc:
-	@make $(MKPARMS)  \
+	@make $(MKPARMS) \
 	CC=$(SUNGCC) \
 	BB=$(SUNGcc) \
-	CFLAGS="$(ENVCFLAGS) $(SUNGCCOPT) $(OPT)" \
+	CFLAGS="$(ENVCFLAGS) $(SUNGCCOPT) $(OPT) -DRELEASE=$(RELEASE)" \
 	INCLUDE="$(ENVINCLUDE)" \
 	LIBS="$(SUNLIBS)" \
 	OSVER=`../MakeSname`
@@ -423,6 +425,10 @@ $(OBJDIR)/bbcp_Pthread.o: bbcp_Pthread.C bbcp_Pthread.h
 $(OBJDIR)/bbcp_RTCopy.o: bbcp_RTCopy.C bbcp_RTCopy.h bbcp_Config.h \
                          bbcp_Emsg.h bbcp_FileSystem.h bbcp_Pthread.h
 	@echo Compiling bbcp_RTCopy.C
+	@$(CC) -c $(CFLAGS) $(INCLUDE) $(*F).C -o $(OBJDIR)/$(*F).o
+
+$(OBJDIR)/bbcp_Set.o: bbcp_Set.C bbcp_C32.h
+	@echo Compiling bbcp_Set.C
 	@$(CC) -c $(CFLAGS) $(INCLUDE) $(*F).C -o $(OBJDIR)/$(*F).o
 
 $(OBJDIR)/bbcp_Stream.o: bbcp_Stream.C bbcp_Stream.h bbcp_Config.h bbcp_Debug.h \

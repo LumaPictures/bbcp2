@@ -115,6 +115,7 @@ bbcp_Config::bbcp_Config()
    SrcUser   = 0;
    SrcHost   = 0;
    SrcBlen   = 0;
+   slkPath   = 0;
    srcPath   = 0;
    srcSpec   = 0;
    srcLast   = 0;
@@ -229,7 +230,7 @@ bbcp_Config::~bbcp_Config()
 #define Cat_Oct(x) {            cbp=n2a(x,&cbp[0],"%o");}
 #define Add_Str(x) {cbp[0]=' '; strcpy(&cbp[1], x); cbp+=strlen(x)+1;}
 
-#define bbcp_VALIDOPTS (char *)"-a.B:b:C:c.d:DeE:fFhi:I:kKl:L:m:nN:oOpP:q:rR.s:S:t:T:u:U:vVw:W:x:y:zZ:4.$#"
+#define bbcp_VALIDOPTS (char *)"-a.AB:b:C:c.d:DeE:fFghi:I:kKl:L:m:nN:oOpP:q:rR.s:S:t:T:u:U:vVw:W:x:y:zZ:4.@:$#"
 #define bbcp_SSOPTIONS bbcp_VALIDOPTS "MH:Y:"
 
 #define Hmsg1(a)   {bbcp_Fmsg("Config", a);    help(1);}
@@ -267,6 +268,8 @@ void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
                  if (CKPdir) {free(CKPdir); CKPdir = 0;}
                  if (arglist.argval) CKPdir = strdup(arglist.argval);
                  break;
+       case 'A': Options |= bbcp_AUTOMKD;
+                 break;
        case 'B': if (a2sz("block size", arglist.argval,
                          rwbsz, 1024, ((int)1)<<30))
                     Cleanup(1, argv[0], cfgfd);
@@ -302,6 +305,8 @@ void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
        case 'f': Options |= bbcp_FORCE;
                  break;
        case 'F': Options |= bbcp_NOSPCHK;
+                 break;
+       case 'g': Options |= bbcp_GROSS;
                  break;
        case 'h': help(0);
                  break;
@@ -410,6 +415,16 @@ void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
        case '4': if (notctl) Options |= bbcp_IPV4;
                     else if (setIPV4(arglist.argval)) Cleanup(1,argv[0],cfgfd);
                  break;
+       case '@': Options &= ~(bbcp_SLFOLLOW | bbcp_SLKEEP);
+                      if (!strcmp("follow", arglist.argval))
+                         Options |= bbcp_SLFOLLOW;
+                 else if (!strcmp("keep",   arglist.argval))
+                         Options |= bbcp_SLKEEP;
+                 else if (!strcmp("ignore", arglist.argval)) {}
+                 else{bbcp_Fmsg("Config","Invalid symlink option -",arglist.argval);
+                      Cleanup(1, argv[0], cfgfd);
+                     }
+                 break;
        case '$': cout <<bbcp_License <<endl;
                  exit(0);
                  break;
@@ -465,6 +480,8 @@ void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
       {int isBad = 0;
        if (Options & bbcp_APPEND)
           isBad = bbcp_Fmsg("Config", "-N xx and -a are mutually exclusive.");
+       if (Options & bbcp_AUTOMKD)
+          isBad = bbcp_Fmsg("Config", "-N xx and -A are mutually exclusive.");
        if (SrcBuff)
           isBad = bbcp_Fmsg("Config", "-N xx and -d are mutually exclusive.");
        if (Options & bbcp_FORCE && Options & bbcp_OPIPE)
@@ -490,6 +507,10 @@ void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
       {bbcp_Fmsg("Config", "'-E ...=' and -r are mutually exclusive.");
            Cleanup(1, argv[0], cfgfd);
       }
+
+// Turn off symlink handling unless this is a recursive copy
+//
+   if (!(Options & bbcp_RECURSE)) Options &= ~(bbcp_SLFOLLOW | bbcp_SLKEEP);
 
 // Check for options mutually exclusive with '-k'
 //
@@ -639,16 +660,17 @@ void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
 void bbcp_Config::help(int rc)
 {
 H("Usage:   bbcp [Options] [Inspec] Outspec")
-I("Options: [-a [dir]] [-b [+]bf] [-B bsz] [-c [lvl]] [-C cfn] [-D] [-d path]")
-H("         [-e] [-E csa] [-f] [-F] [-h] [-i idfn] [-I slfn] [-k] [-K]")
+I("Options: [-a [dir]] [-A] [-b [+]bf] [-B bsz] [-c [lvl]] [-C cfn] [-D] [-d path]")
+H("         [-e] [-E csa] [-f] [-F] [-g] [-h] [-i idfn] [-I slfn] [-k] [-K]")
 H("         [-L opts[@logurl]] [-l logf] [-m mode] [-n] [-N nio] [-o] [-O] [-p]")
 H("         [-P sec] [-r] [-R [args]] [-q qos] [-s snum] [-S srcxeq] [-T trgxeq]")
 H("         [-t sec] [-v] [-V] [-u loc] [-U wsz] [-w [=]wsz] [-x rate] [-y] [-z]")
-H("         [-Z pnf[:pnl]] [-4 [loc]] [-$] [-#] [--]")
+H("         [-Z pnf[:pnl]] [-4 [loc]] [-@ {copy|follow|ignore}] [-$] [-#] [--]")
 I("I/Ospec: [user@][host:]file")
 if (rc) exit(rc);
 I("Function: Secure and fast copy utility.")
 I("-a dir  append mode to restart a previously failed copy.")
+H("-A      automatically create destination directory if it does not exist.")
 H("-b bf   sets the read blocking factor (default is 1).")
 H("-b +bf  adds additional output buffers to mitigate ordering stalls.")
 H("-B bsz  sets the read/write I/O buffer size (default is wsz).")
@@ -661,6 +683,7 @@ H("-E csa  specify checksum alorithm and optionally report or verify checksum.")
 H("        csa: [%]{a32|c32|md5}[=[<value> | <outfile>]]")
 H("-f      forces the copy by first unlinking the target file before copying.")
 H("-F      does not check to see if there is enough space on the target node.")
+H("-g      do a gross copy (i.e. copy even if there are no directory entries).")
 H("-h      print help information.")
 H("-i idfn is the name of the ssh identify file for source and target.")
 H("-I slfn is the name of the file that holds the list of files to be copied.")
@@ -698,6 +721,8 @@ H("        When what is 'dd' then the file and directory are fsynced.")
 H("-z      use reverse connection protocol (i.e., target to source).")
 H("-Z      use port range pn1:pn2 for accepting data transfer connections.")
 H("-4      use only IPV4 stack; optionally, at specified location.")
+H("-@      specifies how symbolic links are handled: copy recreates the symlink,")
+H("        follow copies the symlink target, and ignore skips it (default).")
 H("-$      print the license and exit.")
 H("-#      print the version and exit.")
 H("--      allows an option with a defaulted optional arg to appear last.")
@@ -903,6 +928,7 @@ void bbcp_Config::Config_Ctl(int rwbsz)
 // Now generate all the options we will send to the source and sink
 //
    if (Options & bbcp_APPEND)    Add_Opt('a');
+   if (Options & bbcp_AUTOMKD)   Add_Opt('A');
    if (CKPdir)                                 Add_Str(CKPdir);
    if (BAdd)                    {Add_Opt('b'); Add_Nup(BAdd);}
    if (Bfact)                   {Add_Opt('b'); Add_Num(Bfact);}
@@ -913,6 +939,7 @@ void bbcp_Config::Config_Ctl(int rwbsz)
    if (csOpts  & bbcp_csDashE)   Add_Opt('e');
    if (Options & bbcp_FORCE)     Add_Opt('f');
    if (Options & bbcp_NOSPCHK)   Add_Opt('F');
+   if (Options & bbcp_GROSS)     Add_Opt('g');
    if (Options & bbcp_KEEP)      Add_Opt('k');
    if (Options & bbcp_NOUNLINK)  Add_Opt('K');
    if (LogSpec)                 {Add_Opt('L'); Add_Str(LogSpec);}
@@ -953,6 +980,11 @@ void bbcp_Config::Config_Ctl(int rwbsz)
    if (Options & (bbcp_IDIO | bbcp_ODIO))
                                 {Add_Opt('u'); Add_Str(ubSpec);}
    if (PorSpec)                 {Add_Opt('Z'); Add_Str(PorSpec);}
+   if (Options & (bbcp_SLFOLLOW | bbcp_SLKEEP))
+                                {Add_Opt('@');
+                                 if (Options & bbcp_SLKEEP) {Add_Str("keep");}
+                                    else      {Add_Str("follow");}
+                                }
    CopyOpts = strdup(cbuff);
 }
   
@@ -1444,6 +1476,7 @@ void bbcp_Config::setOpts(bbcp_Args &Args)
      Args.Option("checksum",   5, 'E', ':');
      Args.Option("force",      1, 'f', 0);
      Args.Option("nofschk",    4, 'F', ':');
+     Args.Option("gross",      1, 'g', 0);
      Args.Option("help",       1, 'h', ':');
      Args.Option("idfile",     1, 'i', ':');
      Args.Option("infiles",    2, 'I', ':');
@@ -1451,8 +1484,10 @@ void bbcp_Config::setOpts(bbcp_Args &Args)
      Args.Option("keep",       1, 'k', 0);
 // K
      Args.Option("license",    7, '$', 0);
+     Args.Option("links",      4, '@', ':');  // synonym for --symlinks
      Args.Option("logfile",    1, 'l', ':');
 // L
+     Args.Option("mkdir",      3, 'A', 0);
      Args.Option("mode",       1, 'm', ':');
      Args.Option("nodns",      1, 'n', 0);
      Args.Option("pipe",       4, 'N', ':');
@@ -1464,6 +1499,7 @@ void bbcp_Config::setOpts(bbcp_Args &Args)
      Args.Option("recursive",  1, 'r', 0);
      Args.Option("realtime",   4, 'R', ':');
      Args.Option("streams",    1, 's', ':');
+     Args.Option("symlinks",   7, '@', ':'); // synonym for --links
 // S
      Args.Option("timelimit",  1, 't', ':');
 // T
