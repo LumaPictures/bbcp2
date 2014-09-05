@@ -110,6 +110,8 @@ namespace
 
 bbcp_Config::bbcp_Config()
 {
+   mode_t    uMask = umask(0);
+   umask(uMask);
    SrcBuff   = 0;
    SrcBase   = 0;
    SrcUser   = 0;
@@ -132,9 +134,9 @@ bbcp_Config::bbcp_Config()
    bindtries = 1;
    bindwait  = 0;
    Options   = 0;
-   Mode      = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
+   Mode      = (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH) & ~uMask;
    ModeD     = 0;
-   ModeDC    = Mode   |S_IXUSR|S_IXGRP|S_IXOTH;
+   ModeDC    = (Mode   |S_IXUSR|S_IXGRP|S_IXOTH) & ~uMask;
    BAdd      = 0;
    Bfact     = 0;
    BNum      = 0;
@@ -230,7 +232,7 @@ bbcp_Config::~bbcp_Config()
 #define Cat_Oct(x) {            cbp=n2a(x,&cbp[0],"%o");}
 #define Add_Str(x) {cbp[0]=' '; strcpy(&cbp[1], x); cbp+=strlen(x)+1;}
 
-#define bbcp_VALIDOPTS (char *)"-a.AB:b:C:c.d:DeE:fFghi:I:kKl:L:m:nN:oOpP:q:rR.s:S:t:T:u:U:vVw:W:x:y:zZ:4.@:$#"
+#define bbcp_VALIDOPTS (char *)"-a.AB:b:C:c.d:DeE:fFghi:I:kKl:L:m:nN:oOpP:q:rR.s:S:t:T:u:U:vVw:W:x:y:zZ:4.~@:$#"
 #define bbcp_SSOPTIONS bbcp_VALIDOPTS "MH:Y:"
 
 #define Hmsg1(a)   {bbcp_Fmsg("Config", a);    help(1);}
@@ -414,6 +416,8 @@ void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
                  break;
        case '4': if (notctl) Options |= bbcp_IPV4;
                     else if (setIPV4(arglist.argval)) Cleanup(1,argv[0],cfgfd);
+                 break;
+       case '~': Options |=  (bbcp_PCOPY | bbcp_PTONLY);
                  break;
        case '@': Options &= ~(bbcp_SLFOLLOW | bbcp_SLKEEP);
                       if (!strcmp("follow", arglist.argval))
@@ -665,7 +669,7 @@ H("         [-e] [-E csa] [-f] [-F] [-g] [-h] [-i idfn] [-I slfn] [-k] [-K]")
 H("         [-L opts[@logurl]] [-l logf] [-m mode] [-n] [-N nio] [-o] [-O] [-p]")
 H("         [-P sec] [-r] [-R [args]] [-q qos] [-s snum] [-S srcxeq] [-T trgxeq]")
 H("         [-t sec] [-v] [-V] [-u loc] [-U wsz] [-w [=]wsz] [-x rate] [-y] [-z]")
-H("         [-Z pnf[:pnl]] [-4 [loc]] [-@ {copy|follow|ignore}] [-$] [-#] [--]")
+H("         [-Z pnf[:pnl]] [-4 [loc]] [-~] [-@ {copy|follow|ignore}] [-$] [-#] [--]")
 I("I/Ospec: [user@][host:]file")
 if (rc) exit(rc);
 I("Function: Secure and fast copy utility.")
@@ -721,6 +725,7 @@ H("        When what is 'dd' then the file and directory are fsynced.")
 H("-z      use reverse connection protocol (i.e., target to source).")
 H("-Z      use port range pn1:pn2 for accepting data transfer connections.")
 H("-4      use only IPV4 stack; optionally, at specified location.")
+H("-~      preserve atime and mtime only.")
 H("-@      specifies how symbolic links are handled: copy recreates the symlink,")
 H("        follow copies the symlink target, and ignore skips it (default).")
 H("-$      print the license and exit.")
@@ -955,7 +960,7 @@ void bbcp_Config::Config_Ctl(int rwbsz)
    if (Options & bbcp_XPIPE)    {Add_Opt('N'); Add_Str(upSpec);}
    if (Options & bbcp_ORDER)     Add_Opt('o');
    if (Options & bbcp_OMIT)      Add_Opt('O');
-   if (Options & bbcp_PCOPY)     Add_Opt('p');
+   if (Options & bbcp_PCOPY)     Add_Opt((Options & bbcp_PTONLY ? '~' : 'p'));
    if (Progint)                 {Add_Opt('P'); Add_Num(Progint);}
    if ((n = bbcp_Net.QoS()))    {Add_Opt('q'); Add_Num(n); }
    if (Options & bbcp_RECURSE)   Add_Opt('r');
@@ -1495,6 +1500,7 @@ void bbcp_Config::setOpts(bbcp_Args &Args)
      Args.Option("omit",       4, 'O', 0);
      Args.Option("preserve",   1, 'p', 0);
      Args.Option("progress",   4, 'P', ':');
+     Args.Option("ptime",      2, '~', 0);
      Args.Option("qos",        3, 'q', ':');
      Args.Option("recursive",  1, 'r', 0);
      Args.Option("realtime",   4, 'R', ':');

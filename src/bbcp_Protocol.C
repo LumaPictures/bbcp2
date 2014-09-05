@@ -629,7 +629,7 @@ int bbcp_Protocol::Request(bbcp_Node *Node)
 //
    if ((fp = bbcp_Config.srcPath))
       {if (bbcp_Config.Options & bbcp_PCOPY)
-          {while(fp && fp->setStat() == 0) fp = fp->next;}
+          {while(fp && fp->setStat(bbcp_Config.ModeD) == 0) fp = fp->next;}
           else if (bbcp_Config.ModeD != bbcp_Config.ModeDC)
                   {while(fp && fp->setMode(bbcp_Config.ModeD) == 0) fp = fp->next;}
       }

@@ -452,7 +452,7 @@ int bbcp_FileSpec::Finalize(int retc)
       {if (bbcp_Config.Options & (bbcp_KEEP|bbcp_NOUNLINK)) return retc;
        FSp->RM(targpath);
       }
-      else if (bbcp_Config.Options & bbcp_PCOPY) setStat();
+      else if (bbcp_Config.Options & bbcp_PCOPY) setStat(bbcp_Config.Mode);
               else FSp->setMode(targpath, bbcp_Config.Mode);
 
 // Delete the signature file if one exists
@@ -542,7 +542,7 @@ int bbcp_FileSpec::setMode(mode_t Mode)
 
 // Make sure we have a filesystem here
 //
-   if (!FSp) return bbcp_Fmsg("setStat", "no filesystem for", targpath);
+   if (!FSp) return bbcp_Fmsg("setMode", "no filesystem for", targpath);
 
 // Set the mode
 //
@@ -555,22 +555,30 @@ int bbcp_FileSpec::setMode(mode_t Mode)
 /*                               s e t S t a t                                */
 /******************************************************************************/
 
-int bbcp_FileSpec::setStat()
+int bbcp_FileSpec::setStat(mode_t Mode)
 {
    char *act =  0;
-   int retc;
+   int retc, ecode = 0;
 
 // Make sure we have a filesystem here
 //
    if (!FSp) return bbcp_Fmsg("setStat", "no filesystem for", targpath);
 
-// Set the times, mode, and group
+// Set the atime and mtime
 //
    if ((retc = FSp->setTimes(targpath, Info.atime, Info.mtime)))
-      act = (char *)"setting time on";
-   if ((retc = FSp->setMode (targpath, Info.mode)))
-      act = (char *)"setting mode on";
-   if (Info.Group) FSp->setGroup (targpath, Info.Group);
+      {act = (char *)"setting time on"; ecode = retc;}
+
+// Set the mode (mode depends on whether this is a plain preserve or not)
+//
+   if (!(bbcp_Config.Options & bbcp_PTONLY)) Mode = Info.mode;
+   if ((retc = FSp->setMode (targpath, Mode)))
+      {act = (char *)"setting mode on"; ecode = retc;}
+
+// Set the group only if this is a plain preserve
+//
+   if (!(bbcp_Config.Options & bbcp_PTONLY) && Info.Group)
+      FSp->setGroup (targpath, Info.Group);
 
 // Check if any errors occured (we ignore these just like cp/scp does)
 //

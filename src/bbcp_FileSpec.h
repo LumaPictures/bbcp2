@@ -72,7 +72,7 @@ void             Parse(char *spec, int isPipe=0);
 
 int              setMode(mode_t Mode);
 
-int              setStat();
+int              setStat(mode_t Mode);
 
 void             setTrim();
 
