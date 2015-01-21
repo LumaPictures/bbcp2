@@ -60,6 +60,7 @@
 #include "bbcp_Emsg.h"
 #include "bbcp_Headers.h"
 #include "bbcp_NetLogger.h"
+#include "bbcp_NetAddr.h"
 #include "bbcp_Network.h"
 #include "bbcp_Platform.h"
 #include "bbcp_Stream.h"
@@ -247,6 +248,7 @@ void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
    int mspec = 0, isProg = 0;
    char *Slash, *inFN=0, c, cbhname[MAXHOSTNAMELEN+1];
    bbcp_Args arglist((char *)"bbcp: ");
+   bool warnIPV = false;
 
 // Make sure we have at least one argument
 //
@@ -450,6 +452,10 @@ void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
 // Set the correct ip stack to use (do this before any resolution)
 //
    if (Options & bbcp_IPV4) bbcp_Net.IPV4();
+      else if (bbcp_NetAddr::IPV4Set())
+              {Options |= bbcp_IPV4;
+               if (Options & bbcp_BLAB) warnIPV = true;
+              }
 
 // If we should use the DNS then get our real hostname
 //
@@ -646,6 +652,11 @@ void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
    MTLevel = Streams + (Complvl ?  (Options & bbcp_SNK  ? 3 : 2) : 1)
                      + (Progint && (Options & bbcp_SNK) ? 1 : 0) + 2;
    DEBUG("Optimum MT level is " <<MTLevel);
+
+// Finally check if we should warn that we downgraded to IPv4
+//
+   if (warnIPV) bbcp_Fmsg("Config", bbcp_HostName,
+                          "encountered an IPv6 fault; IPv4 forced.");
 
 // All done
 //
