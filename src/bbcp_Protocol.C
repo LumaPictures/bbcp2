@@ -241,7 +241,8 @@ int bbcp_Protocol::Process(bbcp_Node *Node)
 //
    while(fp)
         {NoGo |= fp->Stat();
-         if (fp->Info.Otype == 'd' && !(bbcp_Config.Options & bbcp_RECURSE))
+         if (fp->Info.Otype == 'd' && !(bbcp_Config.Options & bbcp_RECURSE)
+         &&  fp->Info.size)
             {bbcp_Fmsg("Source", fp->pathname, "is a directory.");
              NoGo = 1; break;
             }
