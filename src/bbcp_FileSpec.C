@@ -366,8 +366,10 @@ bool bbcp_FileSpec::ExtendFileSpec(int &numF, int &numL, int slOpt)
    DIR           *dirp;
    char           relative_name[1024], absolute_name[4096];
    struct stat    sbuf;
+   int            accD = (bbcp_Config.Options & bbcp_RXONLY ? R_OK|X_OK : 0);
+   int            accF = (bbcp_Config.Options & bbcp_RDONLY ? R_OK : 0);
    int            dirFD;
-   bool           aOK = true;
+   bool           aOK = true, blab = (bbcp_Config.Options & bbcp_VERBOSE) != 0;
 
    // Open the directory as we will need a file descriptor to it. Different
    // operaing systems have different ways of doing this.
@@ -394,15 +396,32 @@ bool bbcp_FileSpec::ExtendFileSpec(int &numF, int &numL, int slOpt)
       //
       snprintf(absolute_name,sizeof(absolute_name),"%s/%s",pathname,d->d_name);
 
+      // Cleanup our local file info object if it hasn't been cleaned up
+      //
+      if (fInfo.SLink) {free(fInfo.SLink); fInfo.SLink = 0;}
+      if (fInfo.Group) {free(fInfo.Group); fInfo.Group = 0;}
+
       // Ignore entries we can't stat for any reason
       //
       if (0 != FSp->Stat(absolute_name,d->d_name,dirFD,slOpt,&fInfo)) continue;
 
       // Skip anything that isn't a file or a directory here
       //
-           if (fInfo.Otype == 'f') numF++;
-      else if (fInfo.Otype == 'l'){if (slOpt >= 0) continue; numL++;}
+           if (fInfo.Otype == 'f')
+              {if (accF && access(absolute_name, accF))
+                  {if (blab) SkipMsg(fInfo, absolute_name); continue;}
+               numF++;
+              }
+      else if (fInfo.Otype == 'l')
+              {if (slOpt >= 0) continue;
+               if (!slOpt && accF && access(absolute_name, accF))
+                  {if (blab) SkipMsg(fInfo, absolute_name); continue;}
+               numL++;
+              }
       else if (fInfo.Otype != 'd') continue;
+      else    {if (accD && access(absolute_name, accD))
+                  {if (blab) SkipMsg(fInfo, absolute_name); continue;}
+              }
 
       // If we are to monitor self-referential symlinks do so now
       //
@@ -598,6 +617,23 @@ void bbcp_FileSpec::setTrim()
    trimDir = strlen(fspec);
    if (fspec[trimDir-1] != '/') trimDir++;
    delete this;
+}
+
+/******************************************************************************/
+/*                               S k i p M s g                                */
+/******************************************************************************/
+  
+void bbcp_FileSpec::SkipMsg(bbcp_FileInfo &fInfo, const char *that)
+{
+   const char *what, *why = "unreadable";
+
+         if (fInfo.Otype == 'l' || fInfo.SLink)
+         {why = "unfollowable";  what = "symlink";}
+    else if (fInfo.Otype == 'f') what = "file";
+    else if (fInfo.Otype != 'd') what = "item";
+    else {why = "unsearchable";  what = "directory";}
+
+    bbcp_Fmsg("Source", "Skipping", why, what, that);
 }
 
 /******************************************************************************/

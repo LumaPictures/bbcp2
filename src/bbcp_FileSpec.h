@@ -96,6 +96,7 @@ int              Xfr_Done();
                      }
 
 private:
+void             SkipMsg(bbcp_FileInfo &fInfo, const char *that);
 
 static int       trimDir;
 char            *fspec;

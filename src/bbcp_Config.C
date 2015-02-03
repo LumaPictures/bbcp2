@@ -233,7 +233,7 @@ bbcp_Config::~bbcp_Config()
 #define Cat_Oct(x) {            cbp=n2a(x,&cbp[0],"%o");}
 #define Add_Str(x) {cbp[0]=' '; strcpy(&cbp[1], x); cbp+=strlen(x)+1;}
 
-#define bbcp_VALIDOPTS (char *)"-a.AB:b:C:c.d:DeE:fFghi:I:kKl:L:m:nN:oOpP:q:rR.s:S:t:T:u:U:vVw:W:x:y:zZ:4.~@:$#"
+#define bbcp_VALIDOPTS (char *)"-a.AB:b:C:c.d:DeE:fFghi:I:kKl:L:m:nN:oOpP:q:rR.s:S:t:T:u:U:vVw:W:x:y:zZ:4.~@:$#+"
 #define bbcp_SSOPTIONS bbcp_VALIDOPTS "MH:Y:"
 
 #define Hmsg1(a)   {bbcp_Fmsg("Config", a);    help(1);}
@@ -437,6 +437,8 @@ void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
        case '#': cout <<bbcp_Version.VData <<endl;
                  exit(0);
                  break;
+       case '+': Options |= (bbcp_RDONLY|bbcp_RXONLY);;
+                 break;
        case '-': break;
        default:  if (!notctl)
                     {if (cfgfd < 0) help(255);
@@ -463,6 +465,10 @@ void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
    if (Options & bbcp_NODNS) MyHost = MyAddr;
       else MyHost = bbcp_Net.FullHostName((char *)0);
    bbcp_HostName = MyHost;
+
+// Correct recursive readable selection option
+//
+   if (Options & bbcp_GROSS) Options &= ~bbcp_RXONLY;
 
 // If there is a checksum specification, process it now
 //
@@ -735,6 +741,7 @@ H("-y what perform fsync before closing the output file when what is 'd'.")
 H("        When what is 'dd' then the file and directory are fsynced.")
 H("-z      use reverse connection protocol (i.e., target to source).")
 H("-Z      use port range pn1:pn2 for accepting data transfer connections.")
+H("-+      for recursive copies only copy readable/searchable items.")
 H("-4      use only IPV4 stack; optionally, at specified location.")
 H("-~      preserve atime and mtime only.")
 H("-@      specifies how symbolic links are handled: copy recreates the symlink,")
@@ -1001,6 +1008,7 @@ void bbcp_Config::Config_Ctl(int rwbsz)
                                  if (Options & bbcp_SLKEEP) {Add_Str("keep");}
                                     else      {Add_Str("follow");}
                                 }
+   if (Options & (bbcp_RXONLY|bbcp_RDONLY))    Add_Opt('+');
    CopyOpts = strdup(cbuff);
 }
   
@@ -1513,8 +1521,9 @@ void bbcp_Config::setOpts(bbcp_Args &Args)
      Args.Option("progress",   4, 'P', ':');
      Args.Option("ptime",      2, '~', 0);
      Args.Option("qos",        3, 'q', ':');
-     Args.Option("recursive",  1, 'r', 0);
+     Args.Option("readable",   4, '+', 0);
      Args.Option("realtime",   4, 'R', ':');
+     Args.Option("recursive",  1, 'r', 0);
      Args.Option("streams",    1, 's', ':');
      Args.Option("symlinks",   7, '@', ':'); // synonym for --links
 // S
