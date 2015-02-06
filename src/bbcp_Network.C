@@ -105,7 +105,7 @@ bbcp_Network::bbcp_Network()
    if ((netFD = open("/proc/sys/net/core/rmem_max", O_RDONLY)) > -1)
       {if (read(netFD, netBuff, sizeof(netBuff)) > 0)
           {maxRcvBuff = atoi(netBuff);
-           if (!(maxRcvBuff & 0x40000000) maxRcvBuff = maxRcvBuff<<1;
+           if (!(maxRcvBuff & 0x40000000)) maxRcvBuff = maxRcvBuff<<1;
            maxRcvBuff = maxRcvBuff/8192*8192;
           }
        close(netFD);
@@ -116,7 +116,7 @@ bbcp_Network::bbcp_Network()
    if ((netFD = open("/proc/sys/net/core/wmem_max", O_RDONLY)) > -1)
       {if (read(netFD, netBuff, sizeof(netBuff)) > 0)
           {maxSndBuff = atoi(netBuff);
-           if (!(maxSndBuff & 0x40000000) maxSndBuff = maxSndBuff<<1;
+           if (!(maxSndBuff & 0x40000000)) maxSndBuff = maxSndBuff<<1;
            maxSndBuff = maxSndBuff/8192*8192;
           }
        close(netFD);
