@@ -193,8 +193,9 @@ char bbcp_Args::getopt()
 // If we have a valid argument, then we are all done
 //
    if (argval)
-      if (!*argval) argval = 0;
+     {if (!*argval) argval = 0;
          else {if (*argval != '-') return *optspec;}
+     }
 
 // If argument is optional, let it go
 //
