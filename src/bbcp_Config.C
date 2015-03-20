@@ -265,7 +265,7 @@ void bbcp_Config::Arguments(int argc, char **argv, int cfgfd)
 
 // Process the options
 //
-   while (c=arglist.getopt())
+   while ((c=arglist.getopt()))
      { switch(c)
        {
        case 'a': Options |= bbcp_APPEND | bbcp_ORDER;
@@ -783,16 +783,17 @@ int bbcp_Config::ConfigInit(int argc, char **argv)
 // Make sure we have at least one argument to determine who we are
 //
    if (argc >= 2)
-           if (!strcmp(argv[1], SrcArg))
+     {     if (!strcmp(argv[1], SrcArg))
             {Options |= bbcp_SRC; bbcp_Debug.Who = (char *)"SRC"; return 0;}
       else if (!strcmp(argv[1], SnkArg))
             {Options |= bbcp_SNK; bbcp_Debug.Who = (char *)"SNK"; return 0;}
       else MyProg = strdup(argv[0]);
+     }
 
 // Use the config file, if present
 //
-   if (ConfigFN = getenv("bbcp_CONFIGFN"))
-      {if (retc = Configure(ConfigFN)) return retc;}
+   if ((ConfigFN = getenv("bbcp_CONFIGFN")))
+      {if ((retc = Configure(ConfigFN))) return retc;}
       else {
       // Use configuration file in the home directory, if any
       //
@@ -802,7 +803,7 @@ int bbcp_Config::ConfigInit(int argc, char **argv)
       strcpy(ConfigFN, homedir); strcat(ConfigFN, cfn);
       if (stat(ConfigFN, &buf))
          {retc = 0; free(ConfigFN); ConfigFN = 0;}
-         else if (retc = Configure(ConfigFN)) return retc;
+         else if ((retc = Configure(ConfigFN))) return retc;
      }
 
 // Establish the FD limit
@@ -1378,7 +1379,7 @@ int bbcp_Config::HostAndPort(const char *what, char *path, char *buff, int bsz)
     if (*hn == ':' && hn++ && *hn)
        {errno = 0;
         pnum = strtol(hn, (char **)NULL, 10);
-        if (!pnum && errno || pnum > 65535)
+        if ((!pnum && errno) || pnum > 65535)
            {bbcp_Fmsg("Config",what,"port invalid -", hn); return -1;}
        }
 
@@ -1672,8 +1673,9 @@ int bbcp_Config::Unpipe(char *opts)
 void bbcp_Config::Cleanup(int rc, char *cfgfn, int cfgfd)
 {
 if (cfgfd >= 0 && cfgfn)
-   if (rc > 1)
+  {if (rc > 1)
         bbcp_Fmsg("Config","Check config file",cfgfn,"for conflicts.");
    else bbcp_Fmsg("Config", "Error occured processing config file", cfgfn);
+  }
 exit(rc);
 }

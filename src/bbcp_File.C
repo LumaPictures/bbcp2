@@ -151,7 +151,7 @@ bbcp_Buffer *bbcp_File::getBuffer(long long offset)
 
 // Find a buffer
 //
-   if (bp = nextbuff)
+   if ((bp = nextbuff))
       while(bp && bp->boff != offset) {pp = bp; bp = bp->next;}
 
 // If we found a buffer, unchain it

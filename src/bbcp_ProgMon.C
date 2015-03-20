@@ -144,7 +144,7 @@ void bbcp_ProgMon::Start(bbcp_File *fs_obj, bbcp_ZCX *cx_obj, int pint,
 
 // Run a thread to start the monitor
 //
-   if (retc = bbcp_Thread_Run(bbcp_MonProg, (void *)this, &mytid))
+   if ((retc = bbcp_Thread_Run(bbcp_MonProg, (void *)this, &mytid)))
       {DEBUG("Error " <<retc <<" starting progress monitor thread.");}
       else {DEBUG("Thread " <<mytid <<" monitoring progress.");}
    return;

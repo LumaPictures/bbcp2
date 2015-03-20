@@ -82,14 +82,14 @@ bbcp_BuffPool::~bbcp_BuffPool()
 
 // Free all of the buffers in the empty queue
 //
-   while(currp = last_empty)
+   while((currp = last_empty))
         {last_empty = last_empty->next; delete currp;}
 //cerr <<bbcp_Debug.Who <<"Bdestroy num " <<j++ <<" @ " <<hex <<(int)currp <<dec <<endl;
 
 // Free all full buffers
 //
    FullPool.Lock();
-   while(currp = next_full)
+   while((currp = next_full))
         {next_full = next_full->next; delete currp;}
    FullPool.UnLock();
 }

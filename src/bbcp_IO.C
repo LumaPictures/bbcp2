@@ -69,25 +69,27 @@ void bbcp_IO::Log(const char *rk, const char *wk)
    if (RKeyZ) free(RKeyZ);
 
    if (rk)
-      if (strlen(rk) > 16)
+     {if (strlen(rk) > 16)
          {sprintf(buff, "START_%16s_READ", rk); RKeyA = strdup(buff);
           sprintf(buff,   "END_%16s_READ", rk); RKeyZ = strdup(buff);
          } else {
           sprintf(buff, "START_%s_READ", rk); RKeyA = strdup(buff);
           sprintf(buff,   "END_%s_READ", rk); RKeyZ = strdup(buff);
          }
+      }
 
    if (WKeyA) free(WKeyA);
    if (WKeyZ) free(WKeyZ);
 
    if (wk)
-      if (strlen(wk) > 16)
+     {if (strlen(wk) > 16)
          {sprintf(buff, "START_%16s_WRITE", wk); WKeyA = strdup(buff);
           sprintf(buff,   "END_%16s_WRITE", wk); WKeyZ = strdup(buff);
          } else {
           sprintf(buff, "START_%s_WRITE", wk); WKeyA = strdup(buff);
           sprintf(buff,   "END_%s_WRITE", wk); WKeyZ = strdup(buff);
          }
+     }
 }
 
 /******************************************************************************/

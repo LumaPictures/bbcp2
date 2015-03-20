@@ -213,7 +213,7 @@ int  bbcp_Thread_Start(void *(*proc)(void *), void *arg, pthread_t *tid)
 void *bbcp_Thread_Wait(pthread_t tid)
     {long retc;
      void *tstat;
-     if (retc = pthread_join(tid, (void **)&tstat)) tstat = (void *)retc;
+     if ((retc = pthread_join(tid, (void **)&tstat))) tstat = (void *)retc;
      return tstat;
     }
 

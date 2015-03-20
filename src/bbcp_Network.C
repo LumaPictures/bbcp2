@@ -608,7 +608,7 @@ void bbcp_Network::setOpts(const char *who, int xfd)
    if (ATune || !(wbsz = Window)) wbsz = -1;
       else {if (Sender) wbsz = Window - (Window/5);
             if (setsockopt(xfd, SOL_SOCKET, WinSOP, &wbsz, szwb))
-               bbcp_Emsg(who,errno,"setting",(Sender?"sndbuf":"rcvbuf","size"));
+               bbcp_Emsg(who,errno,"setting",(Sender?"sndbuf":"rcvbuf"),"size");
            }
 
 // If debug is on, we verify that the window was set as we wanted
