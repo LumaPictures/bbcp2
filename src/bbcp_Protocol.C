@@ -714,7 +714,7 @@ int bbcp_Protocol::Request_flist(long long &totsz, int &numlinks, bool dotrim)
           else if (fp->Info.Otype == 'l')
                   {if (lastsp) lastsp->next = fp;
                       else bbcp_Config.slkPath = fp;
-                   lastdp = fp; numlinks++;
+                   lastsp = fp; numlinks++;
                   }
 /*PIPE*/  else if (fp->Info.Otype == 'f' || fp->Info.Otype == 'p')
                   {numfiles++;
