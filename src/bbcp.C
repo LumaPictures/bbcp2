@@ -24,7 +24,7 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 /* bbcp provides a secure fast parallel copy utility. See bbcp_Config.C for
    the actual list of options. The general syntax is:
 
@@ -33,7 +33,7 @@
 /******************************************************************************/
 /*                         i n c l u d e   f i l e s                          */
 /******************************************************************************/
-  
+
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
@@ -54,7 +54,7 @@
 #include "bbcp_Protocol.h"
 #include "bbcp_System.h"
 #include "bbcp_Timer.h"
-  
+
 /******************************************************************************/
 /*                    L O C A L   D E F I N I T I O N S                       */
 /******************************************************************************/
@@ -65,117 +65,130 @@
 /*                      G l o b a l   V a r i a b l e s                       */
 /******************************************************************************/
 
-extern bbcp_Config   bbcp_Config;
+extern bbcp_Config bbcp_Config;
 
 extern bbcp_BuffPool bbcp_BuffPool;
-  
-extern bbcp_System   bbcp_OS;
+
+extern bbcp_System bbcp_OS;
 
 /******************************************************************************/
 /*                                  m a i n                                   */
 /******************************************************************************/
-  
-int main(int argc, char *argv[], char *envp[])
+
+int main(int argc, char* argv[], char* envp[])
 {
-   bbcp_Node     *Source, *Sink;
-   bbcp_Protocol  Protocol;
-   bbcp_FileSpec *fsp, *psp, *sfs, *tfs;
-   int retc;
-   int        TotFiles = 0;
-   long long  TotBytes = 0;
-   double     xRate;
-   bbcp_Timer Elapsed_Timer;
-   const char *xType;
+    bbcp_Node* Source, * Sink;
+    bbcp_Protocol Protocol;
+    bbcp_FileSpec* fsp, * psp, * sfs, * tfs;
+    int retc;
+    int TotFiles = 0;
+    long long TotBytes = 0;
+    double xRate;
+    bbcp_Timer Elapsed_Timer;
+    const char* xType;
 
 // Process configuration file
 //
-   bbcp_OS.EnvP = envp;
-   if (bbcp_Config.ConfigInit(argc, argv)) exit(1);
+    bbcp_OS.EnvP = envp;
+    if (bbcp_Config.ConfigInit(argc, argv))
+        exit(1);
 
 // Process the arguments
 //
-   bbcp_Config.Arguments(argc, argv);
+    bbcp_Config.Arguments(argc, argv);
 
 // Process final source/sink actions here
 //
-   if (bbcp_Config.Options & (bbcp_SRC | bbcp_SNK))
-      {int retc;
-       bbcp_ProcMon theAgent;
-       theAgent.Start(bbcp_OS.getGrandP());
-           {bbcp_Node     SS_Node;
+    if (bbcp_Config.Options & (bbcp_SRC | bbcp_SNK))
+    {
+        int retc;
+        bbcp_ProcMon theAgent;
+        theAgent.Start(bbcp_OS.getGrandP());
+        {
+            bbcp_Node SS_Node;
             retc = (bbcp_Config.Options & bbcp_SRC
-                 ?  Protocol.Process(&SS_Node)
-                 :  Protocol.Request(&SS_Node));
-           }
-       exit(retc);
-      }
+                    ? Protocol.Process(&SS_Node)
+                    : Protocol.Request(&SS_Node));
+        }
+        exit(retc);
+    }
 
 // Do some debugging here
 //
-   Elapsed_Timer.Start();
-   if (bbcp_Debug.Trace > 2) bbcp_Config.Display();
+    Elapsed_Timer.Start();
+    if (bbcp_Debug.Trace > 2)
+        bbcp_Config.Display();
 
 // Allocate the source and sink node and common protocol
 //
-   Source = new bbcp_Node;
-   Sink   = new bbcp_Node;
-   tfs    = bbcp_Config.snkSpec;
+    Source = new bbcp_Node;
+    Sink = new bbcp_Node;
+    tfs = bbcp_Config.snkSpec;
 
 // Allocate the log file
 //
-   if (bbcp_Config.Logfn)
-      {bbcp_Config.MLog = new bbcp_LogFile();
-       if (bbcp_Config.MLog->Open(bbcp_Config.Logfn)) exit(5);
-      }
+    if (bbcp_Config.Logfn)
+    {
+        bbcp_Config.MLog = new bbcp_LogFile();
+        if (bbcp_Config.MLog->Open(bbcp_Config.Logfn))
+            exit(5);
+    }
 
 // Grab all source files for each particular user/host and copy them
 //
-   retc = 0;
-   while(!retc && (psp = bbcp_Config.srcSpec))
-      {fsp = psp->next;
-       while(fsp && Same(fsp->username, psp->username)
-             && Same(fsp->hostname, psp->hostname)) 
-            {psp = fsp; fsp = fsp->next;}
-       psp->next = 0;
-       sfs = bbcp_Config.srcSpec;
-       bbcp_Config.srcSpec = fsp;
-         if (bbcp_Config.Options & bbcp_CON2SRC)
-            retc = Protocol.Schedule(Source, sfs, 
-                                     (char *)bbcp_Config.SrcXeq,
-                                     (char *)bbcp_Config.SrcArg,
-                                     Sink,   tfs,
-                                     (char *)bbcp_Config.SnkXeq,
-                                     (char *)bbcp_Config.SnkArg, Sink);
-            else
-            retc = Protocol.Schedule(Sink,   tfs,
-                                     (char *)bbcp_Config.SnkXeq,
-                                     (char *)bbcp_Config.SnkArg,
+    retc = 0;
+    while (!retc && (psp = bbcp_Config.srcSpec))
+    {
+        fsp = psp->next;
+        while (fsp && Same(fsp->username, psp->username)
+               && Same(fsp->hostname, psp->hostname))
+        {
+            psp = fsp;
+            fsp = fsp->next;
+        }
+        psp->next = 0;
+        sfs = bbcp_Config.srcSpec;
+        bbcp_Config.srcSpec = fsp;
+        if (bbcp_Config.Options & bbcp_CON2SRC)
+            retc = Protocol.Schedule(Source, sfs,
+                                     (char*)bbcp_Config.SrcXeq,
+                                     (char*)bbcp_Config.SrcArg,
+                                     Sink, tfs,
+                                     (char*)bbcp_Config.SnkXeq,
+                                     (char*)bbcp_Config.SnkArg, Sink);
+        else
+            retc = Protocol.Schedule(Sink, tfs,
+                                     (char*)bbcp_Config.SnkXeq,
+                                     (char*)bbcp_Config.SnkArg,
                                      Source, sfs,
-                                     (char *)bbcp_Config.SrcXeq,
-                                     (char *)bbcp_Config.SrcArg, Sink);
-       TotFiles += Sink->TotFiles;
-       TotBytes += Sink->TotBytes;
-      }
+                                     (char*)bbcp_Config.SrcXeq,
+                                     (char*)bbcp_Config.SrcArg, Sink);
+        TotFiles += Sink->TotFiles;
+        TotBytes += Sink->TotBytes;
+    }
 
 // All done
 //
-   delete Source;
-   delete Sink;
+    delete Source;
+    delete Sink;
 
 // Report final statistics if wanted
 //
-   DEBUG("Ending; rc=" <<retc <<" files=" <<TotFiles <<" bytes=" <<TotBytes);
-   if (bbcp_Config.Options & bbcp_VERBOSE
-   && !retc && TotFiles && TotBytes)
-      {double ttime;
-       char buff[128];
-       Elapsed_Timer.Stop();
-       Elapsed_Timer.Report(ttime);
-       xRate = ((double)TotBytes)/ttime*1000.0; xType = bbcp_Config::Scale(xRate);
-       sprintf(buff, "%.1f %sB/s", xRate, xType);
-       cerr <<TotFiles <<(TotFiles != 1 ? " files" : " file");
-       cerr <<" copied at effectively " <<buff <<endl;
-      }
-   if (bbcp_Config.MLog) delete bbcp_Config.MLog;
-   exit(retc);
+    DEBUG("Ending; rc=" << retc << " files=" << TotFiles << " bytes=" << TotBytes);
+    if (bbcp_Config.Options & bbcp_VERBOSE
+        && !retc && TotFiles && TotBytes)
+    {
+        double ttime;
+        char buff[128];
+        Elapsed_Timer.Stop();
+        Elapsed_Timer.Report(ttime);
+        xRate = ((double)TotBytes) / ttime * 1000.0;
+        xType = bbcp_Config::Scale(xRate);
+        sprintf(buff, "%.1f %sB/s", xRate, xType);
+        cerr << TotFiles << (TotFiles != 1 ? " files" : " file");
+        cerr << " copied at effectively " << buff << endl;
+    }
+    if (bbcp_Config.MLog)
+        delete bbcp_Config.MLog;
+    exit(retc);
 }

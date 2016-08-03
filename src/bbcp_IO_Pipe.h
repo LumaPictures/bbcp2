@@ -29,27 +29,41 @@
 /******************************************************************************/
 
 #include "bbcp_IO.h"
-  
-class bbcp_IO_Pipe : public virtual bbcp_IO
-{
+
+class bbcp_IO_Pipe : public virtual bbcp_IO {
 public:
-        int     Close();
+    int Close();
 
-        int     Seek(long long offv) {return 0;}
+    int Seek(long long offv)
+    {
+        return 0;
+    }
 
-        ssize_t Write(char *buff, size_t wrsz)
-                     {return bbcp_IO::Write(buff, wrsz);}
+    ssize_t Write(char* buff, size_t wrsz)
+    {
+        return bbcp_IO::Write(buff, wrsz);
+    }
 
-        ssize_t Write(char *buff, size_t wrsz, off_t offs)
-                     {return bbcp_IO::Write(buff, wrsz);}
+    ssize_t Write(char* buff, size_t wrsz, off_t offs)
+    {
+        return bbcp_IO::Write(buff, wrsz);
+    }
 
-        ssize_t Write(const struct iovec *iovp, int iovn)
-                     {return bbcp_IO::Write(iovp, iovn);}
+    ssize_t Write(const struct iovec* iovp, int iovn)
+    {
+        return bbcp_IO::Write(iovp, iovn);
+    }
 
-             bbcp_IO_Pipe(int fd, pid_t pnum=0) : bbcp_IO(fd), thePid(pnum) {}
-            ~bbcp_IO_Pipe() {}
+    bbcp_IO_Pipe(int fd, pid_t pnum = 0) : bbcp_IO(fd), thePid(pnum)
+    {
+    }
+
+    ~bbcp_IO_Pipe()
+    {
+    }
 
 private:
-pid_t thePid;
+    pid_t thePid;
 };
+
 #endif

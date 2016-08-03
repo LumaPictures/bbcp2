@@ -26,42 +26,48 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 #include "bbcp_BuffPool.h"
 #include "bbcp_File.h"
 #include "bbcp_Pthread.h"
 
 class bbcp_Node;
 
-class bbcp_ProcMon
-{
+class bbcp_ProcMon {
 public:
 
-void  Limit();
+    void Limit();
 
-void  Monitor();
+    void Monitor();
 
-void  Start(pid_t monit=0, bbcp_Node *Remote=0);
-void  Start(int seclim, bbcp_BuffPool *);
+    void Start(pid_t monit = 0, bbcp_Node* Remote = 0);
 
-void  Stop();
+    void Start(int seclim, bbcp_BuffPool*);
 
-      bbcp_ProcMon() : pingNode(0), MonPool(0), mytid(0),
-                       alldone(0), TimeLimit(0), monDone(0) {}
+    void Stop();
 
-     ~bbcp_ProcMon() {Stop();}
+    bbcp_ProcMon() : pingNode(0), MonPool(0), mytid(0),
+                     alldone(0), TimeLimit(0), monDone(0)
+    {
+    }
 
-bbcp_BuffPool *MonPool;
+    ~bbcp_ProcMon()
+    {
+        Stop();
+    }
+
+    bbcp_BuffPool* MonPool;
 
 private:
 
-pthread_t      mytid;
-int            alldone;
-int            TimeLimit;
-pid_t          monPID;
-bbcp_CondVar   CondMon;
-bbcp_Semaphore monDone;
-bbcp_Mutex     pingMutex;
-bbcp_Node     *pingNode;
+    pthread_t mytid;
+    int alldone;
+    int TimeLimit;
+    pid_t monPID;
+    bbcp_CondVar CondMon;
+    bbcp_Semaphore monDone;
+    bbcp_Mutex pingMutex;
+    bbcp_Node* pingNode;
 };
+
 #endif

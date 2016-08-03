@@ -30,29 +30,34 @@
 #include <stdlib.h>
 #include <string.h>
 
-class bbcp_Set
-{
+class bbcp_Set {
 public:
 
-bool Add(const char *key);
+    bool Add(const char* key);
 
-     bbcp_Set(int slots=509);
+    bbcp_Set(int slots = 509);
 
     ~bbcp_Set();
 
 private:
 
-struct SetItem
-{
-SetItem *next;
-char    *key;
+    struct SetItem {
+        SetItem* next;
+        char* key;
 
-         SetItem(const char *kval, SetItem *base)
-                : next(base), key(strdup(kval)) {}
-        ~SetItem() {free(key);}
+        SetItem(const char* kval, SetItem* base)
+            : next(base), key(strdup(kval))
+        {
+        }
+
+        ~SetItem()
+        {
+            free(key);
+        }
+    };
+
+    SetItem** SetTab;
+    unsigned int Slots;
 };
 
-SetItem     **SetTab;
-unsigned int  Slots;
-};
 #endif

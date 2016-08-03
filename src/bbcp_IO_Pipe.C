@@ -37,34 +37,42 @@
 /******************************************************************************/
 /*                        G l o b a l   O b j e c t s                         */
 /******************************************************************************/
-  
+
 extern bbcp_System bbcp_OS;
-  
+
 /******************************************************************************/
 /*                                 C l o s e                                  */
 /******************************************************************************/
-  
+
 int bbcp_IO_Pipe::Close()
 {
-   int oifd, rc, tc;
+    int oifd, rc, tc;
 
 // If we are already closed, return
 //
-   if (iofd < 0) return 0;
+    if (iofd < 0)
+        return 0;
 
 // Close the file descriptor
 //
-   oifd = iofd; iofd = -1;
-   do {rc = close(oifd);} while(rc < 0 && errno == EINTR);
-   if (rc) rc = errno;
+    oifd = iofd;
+    iofd = -1;
+    do
+    {
+        rc = close(oifd);
+    } while (rc < 0 && errno == EINTR);
+    if (rc)
+        rc = errno;
 
 // Check if we should wait for the process to end
 //
-   tc = (thePid ? bbcp_OS.Waitpid(thePid) : 0);
+    tc = (thePid ? bbcp_OS.Waitpid(thePid) : 0);
 
 // Return the result
 //
-   if (tc < 0) return tc;
-   if (tc > 0) return -EPIPE;
-   return rc;
+    if (tc < 0)
+        return tc;
+    if (tc > 0)
+        return -EPIPE;
+    return rc;
 }

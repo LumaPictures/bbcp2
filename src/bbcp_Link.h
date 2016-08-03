@@ -38,41 +38,66 @@
 
 // The bbcp_Link class defines the operations on a network link.
 //
-class bbcp_Link
-{
+class bbcp_Link {
 public:
 
-int          Close() {if (csObj) delete csObj; return IOB.Close();}
+    int Close()
+    {
+        if (csObj)
+            delete csObj;
+        return IOB.Close();
+    }
 
-int          FD() {return IOB.FD();}
+    int FD()
+    {
+        return IOB.FD();
+    }
 
-char        *LinkName() {return Lname;}
+    char* LinkName()
+    {
+        return Lname;
+    }
 
-void         setBuddy(bbcp_Link *mybuddy) {Buddy = mybuddy;}
+    void setBuddy(bbcp_Link* mybuddy)
+    {
+        Buddy = mybuddy;
+    }
 
-static void  setNudge() {Nudge = 1; Wait = 1;}
+    static void setNudge()
+    {
+        Nudge = 1;
+        Wait = 1;
+    }
 
-int          Buff2Net();
+    int Buff2Net();
 
-int          Net2Buff();
+    int Net2Buff();
 
-             bbcp_Link(int newfd=-1, const char *newfn="");
-            ~bbcp_Link() {Close(); if (Lname) free(Lname);}
+    bbcp_Link(int newfd = -1, const char* newfn = "");
 
-int          LinkNum;
+    ~bbcp_Link()
+    {
+        Close();
+        if (Lname)
+            free(Lname);
+    }
+
+    int LinkNum;
 
 private:
 
-static int      Nudge;
-static int      Wait;
+    static int Nudge;
+    static int Wait;
 
-bbcp_Link      *Buddy;
-bbcp_Semaphore  Rendezvous;
-bbcp_IO         IOB;
-bbcp_ChkSum    *csObj;
-char           *Lname;
+    bbcp_Link* Buddy;
+    bbcp_Semaphore Rendezvous;
+    bbcp_IO IOB;
+    bbcp_ChkSum* csObj;
+    char* Lname;
 
-int        Control_In( bbcp_Buffer *inbuff);
-int        Control_Out(bbcp_Buffer *outbuff);
+    int Control_In(bbcp_Buffer* inbuff);
+
+    int Control_Out(bbcp_Buffer* outbuff);
 };
+
 #endif

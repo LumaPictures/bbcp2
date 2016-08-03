@@ -26,34 +26,40 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 #include "bbcp_Pthread.h"
 
 class bbcp_File;
+
 class bbcp_ZCX;
 
-class bbcp_ProgMon
-{
+class bbcp_ProgMon {
 public:
 
-void  Monitor();
+    void Monitor();
 
-void  Start(bbcp_File *fs_obj, bbcp_ZCX *cx_obj, int pint, long long xfrbytes);
+    void Start(bbcp_File* fs_obj, bbcp_ZCX* cx_obj, int pint, long long xfrbytes);
 
-void  Stop();
+    void Stop();
 
-      bbcp_ProgMon() : FSp(0),CXp(0),wtime(0),Tbytes(0),mytid(0),monDone(0)
-                     {}
-     ~bbcp_ProgMon() {Stop();}
+    bbcp_ProgMon() : FSp(0), CXp(0), wtime(0), Tbytes(0), mytid(0), monDone(0)
+    {
+    }
+
+    ~bbcp_ProgMon()
+    {
+        Stop();
+    }
 
 private:
-bbcp_File     *FSp;
-bbcp_ZCX      *CXp;
-int            wtime;
-long long      Tbytes;
-pthread_t      mytid;
-int            alldone;
-bbcp_CondVar   CondMon;
-bbcp_Semaphore monDone;
+    bbcp_File* FSp;
+    bbcp_ZCX* CXp;
+    int wtime;
+    long long Tbytes;
+    pthread_t mytid;
+    int alldone;
+    bbcp_CondVar CondMon;
+    bbcp_Semaphore monDone;
 };
+
 #endif

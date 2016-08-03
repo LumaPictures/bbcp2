@@ -26,58 +26,62 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 #include <sys/types.h>
 #include "bbcp_Pthread.h"
 
-class bbcp_System
-{
+class bbcp_System {
 public:
 
 // Spawn a new process and return the process id (0 if child)
 //
-pid_t     Fork();
+    pid_t Fork();
 
 // Convert a group name to a GID return -1 if failed.
 //
-gid_t      getGID(const char *group);
+    gid_t getGID(const char* group);
 
 // Convert a GID to a group name return "nogroup" if failed.
 //
-char      *getGNM(gid_t gid);
+    char* getGNM(gid_t gid);
 
 // Get the home directory
 //
-char      *getHomeDir();
+    char* getHomeDir();
 
 // Get the process id of the grandparent process
 //
-pid_t      getGrandP();
+    pid_t getGrandP();
 
 // Get total cpu time spent in seconds
 //
-int       Usage(int  &sys, int  &usr);
+    int Usage(int& sys, int& usr);
 
 // Get my username
 //
-char      *UserName();
+    char* UserName();
 
 // Wait for a process to end
 //
-int        Waitpid(pid_t thePid);
-int        Waitpid(pid_t *pvec, int *ent=0, int nomsg=0);
+    int Waitpid(pid_t thePid);
 
-           bbcp_System();
-          ~bbcp_System() {}
+    int Waitpid(pid_t* pvec, int* ent = 0, int nomsg = 0);
 
-char     **EnvP;        // Global environment pointer
-long long  FreeRAM;     // Free ememory at startup
-int        FreePag;     // Number of free pages at startup
-int        TotPag;      // Maximum number of readv/writev elements
-int        PageSize;    // Page size
+    bbcp_System();
+
+    ~bbcp_System()
+    {
+    }
+
+    char** EnvP;        // Global environment pointer
+    long long FreeRAM;     // Free ememory at startup
+    int FreePag;     // Number of free pages at startup
+    int TotPag;      // Maximum number of readv/writev elements
+    int PageSize;    // Page size
 
 private:
 
-bbcp_Mutex Glookup;
+    bbcp_Mutex Glookup;
 };
+
 #endif

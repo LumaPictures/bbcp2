@@ -25,7 +25,7 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 #ifdef LINUX
 #define _XOPEN_SOURCE 600
 #endif
@@ -57,220 +57,292 @@ extern bbcp_System bbcp_OS;
 /* Private:                         E x e c                                   */
 /******************************************************************************/
 
-bbcp_File *bbcp_FS_Pipe::Exec(const char *prog, const char *fa, int opts)
+bbcp_File* bbcp_FS_Pipe::Exec(const char* prog, const char* fa, int opts)
 {
-   static const int maxArgs = 128;
-   struct ArgList {char *Vec[maxArgs];
-                         ArgList() {Vec[1] = 0;}
-                        ~ArgList() {if (Vec[1]) free(Vec[1]);}
-                  } Args;
-   bbcp_IO *iob;
-   pid_t Child;
-   int n, rc, gildes[2], fildes[2], fdLocal, fdRemote, fdTarget;
+    static const int maxArgs = 128;
+    struct ArgList {
+        char* Vec[maxArgs];
+
+        ArgList()
+        {
+            Vec[1] = 0;
+        }
+
+        ~ArgList()
+        {
+            if (Vec[1])
+                free(Vec[1]);
+        }
+    } Args;
+    bbcp_IO* iob;
+    pid_t Child;
+    int n, rc, gildes[2], fildes[2], fdLocal, fdRemote, fdTarget;
 
 // Issue some debugging here
 //
-   DEBUG("Running " <<prog <<' ' <<(fa ? fa : ""));
+    DEBUG("Running " << prog << ' ' << (fa ? fa : ""));
 
 // Validate that we can actually run this program
 //
-   if (!Validate(prog)) return 0;
+    if (!Validate(prog))
+        return 0;
 
 // First tokenize the arguments
 //
-   Args.Vec[0] = (char *)prog;
-   if (!Setup(fa, Args.Vec, maxArgs)) {errno = E2BIG; return 0;}
+    Args.Vec[0] = (char*)prog;
+    if (!Setup(fa, Args.Vec, maxArgs))
+    {
+        errno = E2BIG;
+        return 0;
+    }
 
 // Create a pipe. Minimize file descriptor leaks.
 //
-   if (pipe(fildes) || pipe(gildes)) return 0;
+    if (pipe(fildes) || pipe(gildes))
+        return 0;
 
 // Determine how the other file descriptor is assigned
 //
-   if (opts & O_WRONLY)
-      {fdTarget = STDIN_FILENO;
-       fdLocal  = fildes[1];
-       fdRemote = fildes[0];
-      } else {
-       fdTarget = STDOUT_FILENO;
-       fdLocal  = fildes[0];
-       fdRemote = fildes[1];
-      }
+    if (opts & O_WRONLY)
+    {
+        fdTarget = STDIN_FILENO;
+        fdLocal = fildes[1];
+        fdRemote = fildes[0];
+    }
+    else
+    {
+        fdTarget = STDOUT_FILENO;
+        fdLocal = fildes[0];
+        fdRemote = fildes[1];
+    }
 
 // Fork a process first so we can pick up the next request.
 //
-   if ((Child = bbcp_OS.Fork()))
-      {rc = errno;     close(fdRemote); close(gildes[1]);
-       if (Child < 0) {close(fdLocal);  close(gildes[0]); errno = rc; return 0;}
-       n = read(gildes[0], &rc, sizeof(rc)); close(gildes[0]);
-       if (n == (int)sizeof(rc)) {errno = rc; return 0;}
-       iob =  new bbcp_IO_Pipe(fdLocal, Child);
-       return new bbcp_File(Args.Vec[0], iob, (bbcp_FileSystem *)this, 0);
-      }
+    if ((Child = bbcp_OS.Fork()))
+    {
+        rc = errno;
+        close(fdRemote);
+        close(gildes[1]);
+        if (Child < 0)
+        {
+            close(fdLocal);
+            close(gildes[0]);
+            errno = rc;
+            return 0;
+        }
+        n = read(gildes[0], &rc, sizeof(rc));
+        close(gildes[0]);
+        if (n == (int)sizeof(rc))
+        {
+            errno = rc;
+            return 0;
+        }
+        iob = new bbcp_IO_Pipe(fdLocal, Child);
+        return new bbcp_File(Args.Vec[0], iob, (bbcp_FileSystem*)this, 0);
+    }
 
 // Attach file descriptor to stdin (for targets) to stdout (for source)
 //
-   if (dup2(fdRemote, fdTarget) < 0) exit(255);
-   close(fdLocal);
-   fcntl(gildes[1], F_SETFD, FD_CLOEXEC);
+    if (dup2(fdRemote, fdTarget) < 0)
+        exit(255);
+    close(fdLocal);
+    fcntl(gildes[1], F_SETFD, FD_CLOEXEC);
 
 // Invoke the command never to return
 //
-   execvp(Args.Vec[0], Args.Vec);
-   rc = errno;
-   write(gildes[1], &rc, sizeof(rc));
-   exit(255);
-   return 0;
+    execvp(Args.Vec[0], Args.Vec);
+    rc = errno;
+    write(gildes[1], &rc, sizeof(rc));
+    exit(255);
+    return 0;
 }
-  
+
 /******************************************************************************/
 /*                                  O p e n                                   */
 /******************************************************************************/
 
-bbcp_File *bbcp_FS_Pipe::Open(const char *fn, int opts, int mode, const char *fa)
+bbcp_File* bbcp_FS_Pipe::Open(const char* fn, int opts, int mode, const char* fa)
 {
-   static const int rwxMask = S_ISUID|S_ISGID|S_ISVTX|S_IRWXU|S_IRWXG|S_IRWXO;
-   struct stat xbuff;
-   bbcp_IO *iob;
-   int FD;
+    static const int rwxMask = S_ISUID | S_ISGID | S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO;
+    struct stat xbuff;
+    bbcp_IO* iob;
+    int FD;
 
 // If this is not a FIFO, then it must be a program
 //
-   if (!(mode & S_IFIFO)) return Exec(fn, fa, opts);
+    if (!(mode & S_IFIFO))
+        return Exec(fn, fa, opts);
 
 // Open the fifo (at this point we presume it's a fifo)
 //
-   mode &= rwxMask;
-   if ((FD = (mode ? open(fn, opts, mode) : open(fn, opts))) < 0) return 0;
+    mode &= rwxMask;
+    if ((FD = (mode ? open(fn, opts, mode) : open(fn, opts))) < 0)
+        return 0;
 
 // Verify that this is a fifo
 //
-   if (fstat(FD, &xbuff)) {close(FD); return 0;}
-   if (!(S_ISFIFO(xbuff.st_mode)))
-      {close(FD); errno = EPROTONOSUPPORT; return 0;}
+    if (fstat(FD, &xbuff))
+    {
+        close(FD);
+        return 0;
+    }
+    if (!(S_ISFIFO(xbuff.st_mode)))
+    {
+        close(FD);
+        errno = EPROTONOSUPPORT;
+        return 0;
+    }
 
 // Allocate a file object and return that
 //
-   iob =  new bbcp_IO_Pipe(FD);
-   return new bbcp_File(fn, iob, (bbcp_FileSystem *)this, 0);
+    iob = new bbcp_IO_Pipe(FD);
+    return new bbcp_File(fn, iob, (bbcp_FileSystem*)this, 0);
 }
- 
+
 
 /******************************************************************************/
 /* Private:                        S e t u p                                  */
 /******************************************************************************/
-  
-int bbcp_FS_Pipe::Setup(const char *args, char **Arg, int maxArgs)
+
+int bbcp_FS_Pipe::Setup(const char* args, char** Arg, int maxArgs)
 {
-   char *pp;
-   int j;
+    char* pp;
+    int j;
 
 // Check if we have any args
 //
-   if (!args) return 1;
-   while(*args && *args == ' ') args++;
-   if (!(*args)) return 1;
+    if (!args)
+        return 1;
+    while (*args && *args == ' ')
+        args++;
+    if (!(*args))
+        return 1;
 
 // Prepare to tokenize the args
 //
-   pp = Arg[1] = strdup(args);
-   j = strlen(pp)-1;
-   while(j && pp[j] == ' ') pp[j--] = '\0';
+    pp = Arg[1] = strdup(args);
+    j = strlen(pp) - 1;
+    while (j && pp[j] == ' ')
+        pp[j--] = '\0';
 
 // Construct the argv array based on passed command line.
 //
-   for (j = 2; j < maxArgs && *pp; j++)
-       {while(*pp && *pp != ' ') pp++;
-        if (!(*pp)) break;
+    for (j = 2; j < maxArgs && *pp; j++)
+    {
+        while (*pp && *pp != ' ')
+            pp++;
+        if (!(*pp))
+            break;
         *pp++ = '\0';
-        while(*pp == ' ') pp++;
-        if (!(*pp)) break;
+        while (*pp == ' ')
+            pp++;
+        if (!(*pp))
+            break;
         Arg[j] = pp;
-       }
+    }
 
 // Make sure we did not overflow the buffer
 //
-   if (j < maxArgs-1) Arg[j] = 0;
-      else free(Arg[0]);
-   return (j < maxArgs);
+    if (j < maxArgs - 1)
+        Arg[j] = 0;
+    else
+        free(Arg[0]);
+    return (j < maxArgs);
 }
 
 /******************************************************************************/
 /*                                  S t a t                                   */
 /******************************************************************************/
-  
-int bbcp_FS_Pipe::Stat(const char *path, bbcp_FileInfo *sbuff)
+
+int bbcp_FS_Pipe::Stat(const char* path, bbcp_FileInfo* sbuff)
 {
-   static bbcp_FS_Unix fsUnix;
-   const char *pP;
-   char pBuff[1024];
-   int rc;
+    static bbcp_FS_Unix fsUnix;
+    const char* pP;
+    char pBuff[1024];
+    int rc;
 
 // We are here only if pipes are enabled. Pipe paths cannot have spaces in
 // them. If they do, then it's likely to be an program. We check for this.
 //
-   if ((pP = index(path, ' ')))
-      {int n = pP - path;
-       if (n < (int)sizeof(pBuff))
-          {strncpy(pBuff, path, n); pBuff[n] = 0; path = pBuff;}
-      }
+    if ((pP = index(path, ' ')))
+    {
+        int n = pP - path;
+        if (n < (int)sizeof(pBuff))
+        {
+            strncpy(pBuff, path, n);
+            pBuff[n] = 0;
+            path = pBuff;
+        }
+    }
 
 // Perform the stat function
 //
-   if (!(rc = fsUnix.Stat(path, sbuff)) || rc != -ENOENT) return rc;
+    if (!(rc = fsUnix.Stat(path, sbuff)) || rc != -ENOENT)
+        return rc;
 
 // File was not found, fake this as an executable. An error may occur later.
 //
-   sbuff->fileid = 0;
-   sbuff->mode   = S_IXUSR|S_IXGRP|S_IXOTH;
-   sbuff->size   = 0;
-   sbuff->atime  = time(0);
-   sbuff->ctime  = sbuff->atime;
-   sbuff->mtime  = sbuff->atime;
-   sbuff->Otype = 'f';
-   sbuff->Xtype = 'x';
-   sbuff->Group = strdup("any");
-   return 0;
+    sbuff->fileid = 0;
+    sbuff->mode = S_IXUSR | S_IXGRP | S_IXOTH;
+    sbuff->size = 0;
+    sbuff->atime = time(0);
+    sbuff->ctime = sbuff->atime;
+    sbuff->mtime = sbuff->atime;
+    sbuff->Otype = 'f';
+    sbuff->Xtype = 'x';
+    sbuff->Group = strdup("any");
+    return 0;
 }
 
 /******************************************************************************/
 /*                              V a l i d a t e                               */
 /******************************************************************************/
-  
-bool bbcp_FS_Pipe::Validate(const char *pgm)
+
+bool bbcp_FS_Pipe::Validate(const char* pgm)
 {
-   extern const char *bbcp_HostName;
-   const char *aList = getenv("BBCP_ALLOWPP");
-   char *bList, *xList, *chkPgm;
+    extern const char* bbcp_HostName;
+    const char* aList = getenv("BBCP_ALLOWPP");
+    char* bList, * xList, * chkPgm;
 
 // Check if we are restricting program pipes
 //
-   if (!aList) return true;
+    if (!aList)
+        return true;
 
 // Check if no program pipes are allowed
 //
-   if (!(*aList) || !strcmp(aList, "0"))
-      {cerr <<"bbcp: " <<bbcp_HostName <<" disallows program pipes." <<endl;
-       errno = EPERM;
-       return false;
-      }
+    if (!(*aList) || !strcmp(aList, "0"))
+    {
+        cerr << "bbcp: " << bbcp_HostName << " disallows program pipes." << endl;
+        errno = EPERM;
+        return false;
+    }
 
 // Prepare to scan the allowed program list
 //
-   xList = bList = strdup(aList);
-   while(*bList)
-        {while(*bList && *bList == ' ') bList++;
-         chkPgm = bList; bList++;
-         while(*bList && *bList != ' ') bList++;
-         *bList = 0; bList++;
-         if (!strcmp(pgm, chkPgm)) {free(xList); return true;}
+    xList = bList = strdup(aList);
+    while (*bList)
+    {
+        while (*bList && *bList == ' ')
+            bList++;
+        chkPgm = bList;
+        bList++;
+        while (*bList && *bList != ' ')
+            bList++;
+        *bList = 0;
+        bList++;
+        if (!strcmp(pgm, chkPgm))
+        {
+            free(xList);
+            return true;
         }
+    }
 
 // This program is not allowed
 //
-   free(xList);
-   cerr <<"bbcp: " <<bbcp_HostName <<" disallows " <<pgm
-                   <<" as a program pipe." <<endl;
-   errno = EPERM;
-   return false;
+    free(xList);
+    cerr << "bbcp: " << bbcp_HostName << " disallows " << pgm
+         << " as a program pipe." << endl;
+    errno = EPERM;
+    return false;
 }

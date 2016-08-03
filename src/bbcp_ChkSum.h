@@ -26,48 +26,60 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
-class bbcp_ChkSum
-{
+
+class bbcp_ChkSum {
 public:
 
-static bbcp_ChkSum *Alloc(int csType);
+    static bbcp_ChkSum* Alloc(int csType);
 
 // The below calculates a one-time checksum
 //
-virtual       char *Calc(const char *Buff, int BLen)
-                        {Init(); Update(Buff, BLen); return Final();}
+    virtual char* Calc(const char* Buff, int BLen)
+    {
+        Init();
+        Update(Buff, BLen);
+        return Final();
+    }
 
 // The below returns the current checksum value (defaults to final)
 //
-virtual       char *csCurr(char **Text=0) {return Final(Text);}
+    virtual char* csCurr(char** Text = 0)
+    {
+        return Final(Text);
+    }
 
 // csLen() returns the length of a checksum
 //
-virtual       int   csSize() = 0;
+    virtual int csSize() = 0;
 
 // At the end call Final that will return the actual checksum
 //
-virtual       char *Final(char **Text=0) = 0;
+    virtual char* Final(char** Text = 0) = 0;
 
 // Init() to initialize data structures (always called by constructor)
 //
-virtual       void  Init() = 0;
+    virtual void Init() = 0;
 
 // Call this to get the character name of the checksum object
 //
-virtual const char *Type() = 0;
+    virtual const char* Type() = 0;
 
 // Continue calling Update() to compute running checksum
 //
-virtual       void  Update(const char *Buff, int BLen) = 0;
+    virtual void Update(const char* Buff, int BLen) = 0;
 
-                    bbcp_ChkSum() {}
-virtual            ~bbcp_ChkSum() {}
+    bbcp_ChkSum()
+    {
+    }
+
+    virtual            ~bbcp_ChkSum()
+    {
+    }
 
 protected:
-char *x2a(char *inX);
+    char* x2a(char* inX);
 
-char csBuff[40];
+    char csBuff[40];
 };
+
 #endif

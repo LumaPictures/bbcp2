@@ -27,9 +27,11 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 #if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+
 #include <iostream>
+
 #ifdef BBCP_IOMANIP
 #include <iomanip>
 #endif

@@ -24,7 +24,7 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -35,18 +35,19 @@
 
 /******************************************************************************/
 
-int bbcp_Emsg(const char *sfx, int ecode, const char *txt1, 
-                                   const char *txt2, const char *txt3)
+int bbcp_Emsg(const char* sfx, int ecode, const char* txt1,
+              const char* txt2, const char* txt3)
 {
     int xcode;
-    char ebuff[16], *etxt;
+    char ebuff[16], * etxt;
 
     xcode = (ecode < 0 ? -ecode : ecode);
-    etxt = (char *)strerror(xcode);
+    etxt = (char*)strerror(xcode);
     if (!strncmp(etxt, "Unknown", 7))
-       {snprintf(ebuff, sizeof(ebuff), "Error %d", ecode);
+    {
+        snprintf(ebuff, sizeof(ebuff), "Error %d", ecode);
         etxt = ebuff;
-       }
+    }
 
     bbcp_Fmsg(sfx, etxt, txt1, txt2, txt3);
 
@@ -55,20 +56,21 @@ int bbcp_Emsg(const char *sfx, int ecode, const char *txt1,
 
 /******************************************************************************/
 
-int bbcp_Fmsg(const char *sfx, const char *txt1, const char *txt2,
-                               const char *txt3, const char *txt4,
-                               const char *txt5, const char *txt6)
+int bbcp_Fmsg(const char* sfx, const char* txt1, const char* txt2,
+              const char* txt3, const char* txt4,
+              const char* txt5, const char* txt6)
 {
-   const char *bV[] = {txt2, txt3, txt4, txt5, txt6};
-   char *bP, buff[2048];
-   int i;
+    const char* bV[] = {txt2, txt3, txt4, txt5, txt6};
+    char* bP, buff[2048];
+    int i;
 
-   bP = buff + (sfx && bbcp_Debug.Trace
-      ? sprintf(buff, "bbcp_%s.%s: %s", bbcp_Debug.Who, sfx, txt1)
-      : sprintf(buff, "bbcp: %s", txt1));
+    bP = buff + (sfx && bbcp_Debug.Trace
+                 ? sprintf(buff, "bbcp_%s.%s: %s", bbcp_Debug.Who, sfx, txt1)
+                 : sprintf(buff, "bbcp: %s", txt1));
 
-   for (i = 0; i < 5 && bV[i]; i++) bP += sprintf(bP, " %s", bV[i]);
-   strcpy(bP, "\n");
-   cerr <<buff;
-   return -1;
+    for (i = 0; i < 5 && bV[i]; i++)
+        bP += sprintf(bP, " %s", bV[i]);
+    strcpy(bP, "\n");
+    cerr << buff;
+    return -1;
 }

@@ -31,81 +31,97 @@
 #include <sys/types.h>
 #include <utime.h>
 #include "bbcp_FileSystem.h"
-  
+
 // Parse a spec formed as: [username@][hostname:]fname
 //
-class bbcp_FileSpec
-{
+class bbcp_FileSpec {
 public:
 
-bbcp_FileSpec        *next;
-char                 *username;
-char                 *hostname;
-char                 *pathname;
-char                 *filename;
-char                 *filereqn;
-char                 *fileargs;
-char                 *targpath;
-char                 *targetfn;
-long long             targetsz;
-char                 *targsigf;
-int                   seqno;
-struct bbcp_FileInfo  Info;
+    bbcp_FileSpec* next;
+    char* username;
+    char* hostname;
+    char* pathname;
+    char* filename;
+    char* filereqn;
+    char* fileargs;
+    char* targpath;
+    char* targetfn;
+    long long targetsz;
+    char* targsigf;
+    int seqno;
+    struct bbcp_FileInfo Info;
 
-int              Compose(long long did, char *dpath, int dplen, char *fname);
+    int Compose(long long did, char* dpath, int dplen, char* fname);
 
-int              Create_Link();
+    int Create_Link();
 
-int              Create_Path();
+    int Create_Path();
 
-int              Decode(char *buff, char *xName=0);
+    int Decode(char* buff, char* xName = 0);
 
-int              Encode(char *buff, size_t blen);
+    int Encode(char* buff, size_t blen);
 
-bool             ExtendFileSpec(int &numF, int &numL, int slOpt);
+    bool ExtendFileSpec(int& numF, int& numL, int slOpt);
 
-int              Finalize(int retc=0);
+    int Finalize(int retc = 0);
 
-bbcp_FileSystem *FSys() {return FSp;}
+    bbcp_FileSystem* FSys()
+    {
+        return FSp;
+    }
 
-void             Parse(char *spec, int isPipe=0);
+    void Parse(char* spec, int isPipe = 0);
 
-int              setMode(mode_t Mode);
+    int setMode(mode_t Mode);
 
-int              setStat(mode_t Mode);
+    int setStat(mode_t Mode);
 
-void             setTrim();
+    void setTrim();
 
-int              Stat(int complain=1);
+    int Stat(int complain = 1);
 
-int              WriteSigFile();
+    int WriteSigFile();
 
-int              Xfr_Done();
+    int Xfr_Done();
 
-     bbcp_FileSpec(bbcp_FileSystem *fsp=0, char *hname = 0, char *uname=0)
-                  : next(0), username(uname), hostname(hname), pathname(0),
-                    filename(0), filereqn(0), fileargs(0),
-                    targpath(0), targetfn(0), targetsz(0), targsigf(0),
-                    fspec(0), fspec1(0), fspec2(0), slData(0), FSp(fsp) {}
-    ~bbcp_FileSpec() {if (fspec)    free(fspec);
-                      if (fspec1)   free(fspec1);
-                      if (fspec2)   free(fspec2);
-                      if (slData)   free(slData);
-                      if (targpath) free(targpath);
-                      if (targsigf) free(targsigf);
-                     }
+    bbcp_FileSpec(bbcp_FileSystem* fsp = 0, char* hname = 0, char* uname = 0)
+        : next(0), username(uname), hostname(hname), pathname(0),
+          filename(0), filereqn(0), fileargs(0),
+          targpath(0), targetfn(0), targetsz(0), targsigf(0),
+          fspec(0), fspec1(0), fspec2(0), slData(0), FSp(fsp)
+    {
+    }
+
+    ~bbcp_FileSpec()
+    {
+        if (fspec)
+            free(fspec);
+        if (fspec1)
+            free(fspec1);
+        if (fspec2)
+            free(fspec2);
+        if (slData)
+            free(slData);
+        if (targpath)
+            free(targpath);
+        if (targsigf)
+            free(targsigf);
+    }
 
 private:
-void             SkipMsg(bbcp_FileInfo &fInfo, const char *that);
+    void SkipMsg(bbcp_FileInfo& fInfo, const char* that);
 
-static int       trimDir;
-char            *fspec;
-char            *fspec1;
-char            *fspec2;
-char            *slData;
-bbcp_FileSystem *FSp;
-int              Xfr_Fixup();
-void             BuildPaths();
+    static int trimDir;
+    char* fspec;
+    char* fspec1;
+    char* fspec2;
+    char* slData;
+    bbcp_FileSystem* FSp;
+
+    int Xfr_Fixup();
+
+    void BuildPaths();
 
 };
+
 #endif

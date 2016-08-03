@@ -24,7 +24,7 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 #ifdef LINUX
 #define _XOPEN_SOURCE 600
 #endif
@@ -38,9 +38,13 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
 #ifndef FREEBSD
+
 #include <sys/statvfs.h>
+
 #endif
+
 #include "bbcp_File.h"
 #include "bbcp_FS_Unix.h"
 #include "bbcp_Platform.h"
@@ -51,7 +55,7 @@
 /******************************************************************************/
 /*                         L o c a l   D e f i n e s                          */
 /******************************************************************************/
-  
+
 #if defined(MACOS) || defined (AIX)
 #define S_IAMB      0x1FF
 #endif
@@ -67,42 +71,44 @@
 /******************************************************************************/
 
 extern bbcp_System bbcp_OS;
-  
+
 /******************************************************************************/
 /*                            A p p l i c a b l e                             */
 /******************************************************************************/
-  
-int bbcp_FS_Unix::Applicable(const char *path)
+
+int bbcp_FS_Unix::Applicable(const char* path)
 {
 #ifdef FREEBSD
-   if (!fs_path) fs_path = strdup(path);
+    if (!fs_path) fs_path = strdup(path);
 #else
-   struct statvfs buf;
+    struct statvfs buf;
 
 // To find out whether or not we are applicable, simply do a statvfs on the
 // incomming path. If we can do it, then we are a unix filesystem.
 //
-   if (statvfs(path, &buf)) return 0;
+    if (statvfs(path, &buf))
+        return 0;
 
 // Set the sector size
 //
-   secSize = buf.f_frsize;
+    secSize = buf.f_frsize;
 
 // Save the path to this filesystem if we don't have one. This is a real
 // kludgy short-cut since in bbcp we only have a single output destination.
 //
-   if (!fs_path) 
-      {fs_path = strdup(path); 
-       memcpy((void *)&fs_id, (const void *)&buf.f_fsid, sizeof(fs_id));
-      }
+    if (!fs_path)
+    {
+        fs_path = strdup(path);
+        memcpy((void*)&fs_id, (const void*)&buf.f_fsid, sizeof(fs_id));
+    }
 #endif
-   return 1;
+    return 1;
 }
 
 /******************************************************************************/
 /*                                E n o u g h                                 */
 /******************************************************************************/
-  
+
 int bbcp_FS_Unix::Enough(long long bytes, int numfiles)
 {
 #ifndef FREEBSD
@@ -111,78 +117,90 @@ int bbcp_FS_Unix::Enough(long long bytes, int numfiles)
 
 // Perform a stat call on the filesystem
 //
-   if (statvfs(fs_path, &buf)) return 0;
+    if (statvfs(fs_path, &buf))
+        return 0;
 
 // Calculate free space
 //
-   free_space = (long long)buf.f_bsize * (long long)buf.f_bavail;
+    free_space = (long long)buf.f_bsize * (long long)buf.f_bavail;
 
 // Indicate whether there is enough space here
 //
 #ifdef LINUX
-   if (!(buf.f_files | buf.f_ffree | buf.f_favail)) numfiles = 0;
+    if (!(buf.f_files | buf.f_ffree | buf.f_favail))
+        numfiles = 0;
 #endif
-   return (free_space > bytes) && buf.f_favail > numfiles;
+    return (free_space > bytes) && buf.f_favail > numfiles;
 #else
-   return 1;
+    return 1;
 #endif
 }
 
 /******************************************************************************/
 /*                                 F s y n c                                  */
 /******************************************************************************/
-  
-int bbcp_FS_Unix::Fsync(const char *fn, int fd)
+
+int bbcp_FS_Unix::Fsync(const char* fn, int fd)
 {
-   int rc = 0;
+    int rc = 0;
 
 // First do an fsync on the file
 //
-   if (fsync(fd)) return -errno;
+    if (fsync(fd))
+        return -errno;
 
 // If a filename was passed, do an fsync on the directory as well
 //
-   if (fn)
-      {const char *Slash = rindex(fn, '/');
-       char dBuff[MAXPATHLEN+8];
-       if (Slash)
-          {int n = Slash - fn;
-           strncpy(dBuff, fn, n); dBuff[n] = 0;
-           if ((n = open(dBuff, O_RDONLY)) < 0) return -errno;
-           if (fsync(n)) rc = -errno;
-           close(n);
-          }
-      }
+    if (fn)
+    {
+        const char* Slash = rindex(fn, '/');
+        char dBuff[MAXPATHLEN + 8];
+        if (Slash)
+        {
+            int n = Slash - fn;
+            strncpy(dBuff, fn, n);
+            dBuff[n] = 0;
+            if ((n = open(dBuff, O_RDONLY)) < 0)
+                return -errno;
+            if (fsync(n))
+                rc = -errno;
+            close(n);
+        }
+    }
 
 // All done
 //
-   return rc;
+    return rc;
 }
 
 /******************************************************************************/
 /*                               g e t S i z e                                */
 /******************************************************************************/
-  
-long long bbcp_FS_Unix::getSize(int fd, long long *bsz)
+
+long long bbcp_FS_Unix::getSize(int fd, long long* bsz)
 {
-   struct stat Stat;
+    struct stat Stat;
 
 // Get the size of the file
 //
-   if (fstat(fd, &Stat)) return -errno;
-   if (bsz) *bsz = (secSize > 8192 ? 8192 : secSize);
-   return Stat.st_size;
+    if (fstat(fd, &Stat))
+        return -errno;
+    if (bsz)
+        *bsz = (secSize > 8192 ? 8192 : secSize);
+    return Stat.st_size;
 }
 
 /******************************************************************************/
 /*                                 M K D i r                                  */
 /******************************************************************************/
 
-int bbcp_FS_Unix::MKDir(const char *path, mode_t mode)
+int bbcp_FS_Unix::MKDir(const char* path, mode_t mode)
 {
-    if (mkdir(path, mode)) return -errno;
+    if (mkdir(path, mode))
+        return -errno;
 
-    if (chmod(path, 0755)) return -errno;
+    if (chmod(path, 0755))
+        return -errno;
 
     return 0;
 }
@@ -191,194 +209,216 @@ int bbcp_FS_Unix::MKDir(const char *path, mode_t mode)
 /*                                 M K L n k                                  */
 /******************************************************************************/
 
-int bbcp_FS_Unix::MKLnk(const char *ldata, const char *path)
+int bbcp_FS_Unix::MKLnk(const char* ldata, const char* path)
 {
-    if (symlink(ldata, path)) return -errno;
+    if (symlink(ldata, path))
+        return -errno;
 
     return 0;
 }
-  
+
 /******************************************************************************/
 /*                                  O p e n                                   */
 /******************************************************************************/
 
-bbcp_File *bbcp_FS_Unix::Open(const char *fn, int opts, int mode, const char *fa)
+bbcp_File* bbcp_FS_Unix::Open(const char* fn, int opts, int mode, const char* fa)
 {
-    static const int rwxMask = S_ISUID|S_ISGID|S_ISVTX|S_IRWXU|S_IRWXG|S_IRWXO;
+    static const int rwxMask = S_ISUID | S_ISGID | S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO;
     int FD;
-    bbcp_IO *iob;
+    bbcp_IO* iob;
 
 // Check for direct I/O
 //
 #ifdef O_DIRECT
-   if (dIO) opts |= O_DIRECT;
+    if (dIO)
+        opts |= O_DIRECT;
 #endif
 
 // Open the file
 //
-   mode &= rwxMask;
-   if ((FD = (mode ? open(fn, opts, mode) : open(fn, opts))) < 0) 
-      return (bbcp_File *)0;
+    mode &= rwxMask;
+    if ((FD = (mode ? open(fn, opts, mode) : open(fn, opts))) < 0)
+        return (bbcp_File*)0;
 
 // Advise about file access in Linux
 //
 #ifdef LINUX
-   posix_fadvise(FD,0,0,POSIX_FADV_SEQUENTIAL|POSIX_FADV_NOREUSE);
+    posix_fadvise(FD, 0, 0, POSIX_FADV_SEQUENTIAL | POSIX_FADV_NOREUSE);
 #endif
 
 // Do direct I/O for Solaris
 //
 #ifdef SUN
-   if (dIO && directio(FD, DIRECTIO_ON))
-      {DEBUG(strerror(errno) <<" requesting direct i/o for " <<fn); dIO = 0;}
+    if (dIO && directio(FD, DIRECTIO_ON))
+       {DEBUG(strerror(errno) <<" requesting direct i/o for " <<fn); dIO = 0;}
 #endif
 
 // Allocate a file object and return that
 //
-   iob =  new bbcp_IO(FD);
-   return new bbcp_File(fn, iob, (bbcp_FileSystem *)this, (dIO ? secSize : 0));
+    iob = new bbcp_IO(FD);
+    return new bbcp_File(fn, iob, (bbcp_FileSystem*)this, (dIO ? secSize : 0));
 }
-  
+
 /******************************************************************************/
 /*                                    R M                                     */
 /******************************************************************************/
-  
-int bbcp_FS_Unix::RM(const char *path)
+
+int bbcp_FS_Unix::RM(const char* path)
 {
-    if (!remove(path)) return 0;
+    if (!remove(path))
+        return 0;
     return -errno;
 }
 
 /******************************************************************************/
 /*                              s e t G r o u p                               */
 /******************************************************************************/
-  
-int bbcp_FS_Unix::setGroup(const char *path, const char *Group)
+
+int bbcp_FS_Unix::setGroup(const char* path, const char* Group)
 {
     gid_t gid;
 
 // Convert the group name to a gid
 //
-   if (!Group || !Group[0]) return 0;
-   gid = bbcp_OS.getGID(Group);
+    if (!Group || !Group[0])
+        return 0;
+    gid = bbcp_OS.getGID(Group);
 
 // Set the group code and return
 //
-   if (chown(path, (uid_t)-1, gid)) return -errno;
-   return 0;
+    if (chown(path, (uid_t)-1, gid))
+        return -errno;
+    return 0;
 }
 
 /******************************************************************************/
 /*                               s e t M o d e                                */
 /******************************************************************************/
-  
-int bbcp_FS_Unix::setMode(const char *path, mode_t mode)
+
+int bbcp_FS_Unix::setMode(const char* path, mode_t mode)
 {
-    if (chmod(path, mode)) return -errno;
+    if (chmod(path, mode))
+        return -errno;
     return 0;
 }
 
 /******************************************************************************/
 /*                              s e t T i m e s                               */
 /******************************************************************************/
-  
-int bbcp_FS_Unix::setTimes(const char *path, time_t atime, time_t mtime)
+
+int bbcp_FS_Unix::setTimes(const char* path, time_t atime, time_t mtime)
 {
     struct utimbuf ftimes;
 
     ftimes.actime = atime;
-    ftimes.modtime= mtime;
-    if (utime(path, &ftimes)) return -errno;
+    ftimes.modtime = mtime;
+    if (utime(path, &ftimes))
+        return -errno;
     return 0;
 }
- 
+
 /******************************************************************************/
 /*                                  S t a t                                   */
 /******************************************************************************/
-  
-int bbcp_FS_Unix::Stat(const char *path, bbcp_FileInfo *sbuff)
+
+int bbcp_FS_Unix::Stat(const char* path, bbcp_FileInfo* sbuff)
 {
-   struct stat xbuff;
+    struct stat xbuff;
 
 // Perform the stat function
 //
-   if (stat(path, &xbuff)) return -errno;
-   if (!sbuff) return 0;
-   return Stat(xbuff, sbuff);
+    if (stat(path, &xbuff))
+        return -errno;
+    if (!sbuff)
+        return 0;
+    return Stat(xbuff, sbuff);
 }
 
 /******************************************************************************/
-  
-int bbcp_FS_Unix::Stat(const char *path, const char *dent, int fd,
-                       int chklnks, bbcp_FileInfo *sbuff)
+
+int bbcp_FS_Unix::Stat(const char* path, const char* dent, int fd,
+                       int chklnks, bbcp_FileInfo* sbuff)
 {
-   struct stat xbuff;
-   char lbuff[2048];
-   int n;
+    struct stat xbuff;
+    char lbuff[2048];
+    int n;
 
 // Perform the stat function
 //
 #ifdef AT_SYMLINK_NOFOLLOW
-   if (fstatat(fd, dent, &xbuff, AT_SYMLINK_NOFOLLOW)) return -errno;
-   if ((xbuff.st_mode & S_IFMT) != S_IFLNK)
-      return (sbuff ? Stat(xbuff, sbuff) : 0);
-   if (chklnks > 0) return -ENOENT;
-   if (!sbuff) return 0;
-   if ((n = READLINK(fd,dent,path,lbuff,sizeof(lbuff)-1)) < 0) return -errno;
+    if (fstatat(fd, dent, &xbuff, AT_SYMLINK_NOFOLLOW))
+        return -errno;
+    if ((xbuff.st_mode & S_IFMT) != S_IFLNK)
+        return (sbuff ? Stat(xbuff, sbuff) : 0);
+    if (chklnks > 0)
+        return -ENOENT;
+    if (!sbuff)
+        return 0;
+    if ((n = READLINK(fd, dent, path, lbuff, sizeof(lbuff) - 1)) < 0)
+        return -errno;
 // if ((n = readlinkat(fd, dent, lbuff, sizeof(lbuff)-1)) < 0) return -errno;
-   lbuff[n] = 0;
-   if(sbuff->SLink) free(sbuff->SLink);
-   sbuff->SLink = strdup(lbuff);
-   if (!chklnks && fstatat(fd, dent, &xbuff, 0)) return -errno;
-   return Stat(xbuff, sbuff);
+    lbuff[n] = 0;
+    if (sbuff->SLink)
+        free(sbuff->SLink);
+    sbuff->SLink = strdup(lbuff);
+    if (!chklnks && fstatat(fd, dent, &xbuff, 0))
+        return -errno;
+    return Stat(xbuff, sbuff);
 #else
-   if (lstat(path, &xbuff)) return -errno;
-   if ((xbuff.st_mode & S_IFMT) != S_IFLNK)
-      return (sbuff ? Stat(xbuff, sbuff) : 0);
-   if (chklnks > 0) return -ENOENT;
-   if (!sbuff) return 0;
-   if ((n = readlink(path, lbuff, sizeof(lbuff)-1)) < 0) return -errno;
-   lbuff[n] = 0;
-   if(sbuff->SLink) free(sbuff->SLink);
-   sbuff->SLink = strdup(lbuff);
-   if (!chklnks && stat(path, &xbuff)) return -errno;
-   return Stat(xbuff, sbuff);
+    if (lstat(path, &xbuff)) return -errno;
+    if ((xbuff.st_mode & S_IFMT) != S_IFLNK)
+       return (sbuff ? Stat(xbuff, sbuff) : 0);
+    if (chklnks > 0) return -ENOENT;
+    if (!sbuff) return 0;
+    if ((n = readlink(path, lbuff, sizeof(lbuff)-1)) < 0) return -errno;
+    lbuff[n] = 0;
+    if(sbuff->SLink) free(sbuff->SLink);
+    sbuff->SLink = strdup(lbuff);
+    if (!chklnks && stat(path, &xbuff)) return -errno;
+    return Stat(xbuff, sbuff);
 #endif
 }
 
 /******************************************************************************/
-  
-int bbcp_FS_Unix::Stat(struct stat &xbuff, bbcp_FileInfo *sbuff)
+
+int bbcp_FS_Unix::Stat(struct stat& xbuff, bbcp_FileInfo* sbuff)
 {
-   static const int isXeq = S_IXUSR|S_IXGRP|S_IXOTH;
+    static const int isXeq = S_IXUSR | S_IXGRP | S_IXOTH;
 
 // Copy the stat info into our own structure
 //
-   sbuff->fileid = ((long long)xbuff.st_dev)<<32 | (long long)xbuff.st_ino;
-   sbuff->mode   = xbuff.st_mode & (S_IAMB | 0xF00);
-   sbuff->size   = xbuff.st_size;
-   sbuff->atime  = xbuff.st_atime;
-   sbuff->ctime  = xbuff.st_ctime;
-   sbuff->mtime  = xbuff.st_mtime;
+    sbuff->fileid = ((long long)xbuff.st_dev) << 32 | (long long)xbuff.st_ino;
+    sbuff->mode = xbuff.st_mode & (S_IAMB | 0xF00);
+    sbuff->size = xbuff.st_size;
+    sbuff->atime = xbuff.st_atime;
+    sbuff->ctime = xbuff.st_ctime;
+    sbuff->mtime = xbuff.st_mtime;
 
 // Get type of object
 //
 //
-        if (S_ISREG( xbuff.st_mode)){sbuff->Otype = 'f';
-        if (isXeq &  xbuff.st_mode)  sbuff->Xtype = 'x';
-                                    }
-   else if (S_ISFIFO(xbuff.st_mode)) sbuff->Otype = 'p';
-   else if (S_ISDIR( xbuff.st_mode)) sbuff->Otype = 'd';
-   else if ((xbuff.st_mode & S_IFMT) == S_IFLNK)
-                                     sbuff->Otype = 'l';
-   else                              sbuff->Otype = '?';
+    if (S_ISREG(xbuff.st_mode))
+    {
+        sbuff->Otype = 'f';
+        if (isXeq & xbuff.st_mode)
+            sbuff->Xtype = 'x';
+    }
+    else if (S_ISFIFO(xbuff.st_mode))
+        sbuff->Otype = 'p';
+    else if (S_ISDIR(xbuff.st_mode))
+        sbuff->Otype = 'd';
+    else if ((xbuff.st_mode & S_IFMT) == S_IFLNK)
+        sbuff->Otype = 'l';
+    else
+        sbuff->Otype = '?';
 
 // Convert gid to a group name
 //
-   if (sbuff->Group) free(sbuff->Group);
-   sbuff->Group = bbcp_OS.getGNM(xbuff.st_gid);
+    if (sbuff->Group)
+        free(sbuff->Group);
+    sbuff->Group = bbcp_OS.getGNM(xbuff.st_gid);
 
 // All done
 //
-   return 0;
+    return 0;
 }

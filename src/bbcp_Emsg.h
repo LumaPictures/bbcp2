@@ -27,10 +27,11 @@
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
 
-extern int bbcp_Emsg(const char *sfx, int ecode, const char *txt1,
-                                      const char *txt2=0, const char *txt3=0);
-  
-extern int bbcp_Fmsg(const char *sfx, const char *txt1,   const char *txt2=0,
-                                      const char *txt3=0, const char *txt4=0,
-                                      const char *txt5=0, const char *txt6=0);
+extern int bbcp_Emsg(const char* sfx, int ecode, const char* txt1,
+                     const char* txt2 = 0, const char* txt3 = 0);
+
+extern int bbcp_Fmsg(const char* sfx, const char* txt1, const char* txt2 = 0,
+                     const char* txt3 = 0, const char* txt4 = 0,
+                     const char* txt5 = 0, const char* txt6 = 0);
+
 #endif

@@ -27,7 +27,7 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 
@@ -38,8 +38,9 @@
 //! bigger than we really need (e.g. 256 bytes in Solaris and 128 in Linux).
 //------------------------------------------------------------------------------
 
-union bbcp_NetSockAddr {struct sockaddr_in6 v6;
-                        struct sockaddr_in  v4;
-                        struct sockaddr     Addr;
-                       };
+union bbcp_NetSockAddr {
+    struct sockaddr_in6 v6;
+    struct sockaddr_in v4;
+    struct sockaddr Addr;
+};
 #endif

@@ -31,7 +31,7 @@
 //
 #include <stdlib.h>
 #include <sys/param.h>
-  
+
 #if defined(_BIG_ENDIAN) || defined(__BIG_ENDIAN__) || \
    defined(__IEEE_BIG_ENDIAN) || \
    (defined(__BYTE_ORDER) && __BYTE_ORDER == __BIG_ENDIAN)

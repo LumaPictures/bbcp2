@@ -31,19 +31,27 @@
 
 #include "bbcp_Headers.h"
 
-struct bbcp_Debug
-       {int   Trace;
-        char *Who;
-        int   mypid;
+struct bbcp_Debug {
+    int Trace;
+    char* Who;
+    int mypid;
 
-        bbcp_Debug() {Trace = 0; Who = (char *)"CTL"; mypid = (int)getpid();}
-       ~bbcp_Debug() {}
-      };
+    bbcp_Debug()
+    {
+        Trace = 0;
+        Who = (char*)"CTL";
+        mypid = (int)getpid();
+    }
+
+    ~bbcp_Debug()
+    {
+    }
+};
 
 #ifndef BBCP_CONFIG_DEBUG
 extern bbcp_Debug bbcp_Debug;
 #endif
-  
+
 #define DEBUGON    (bbcp_Debug.Trace)
 
 #define DEBUG(x)  {if (bbcp_Debug.Trace) \

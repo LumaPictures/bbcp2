@@ -19,7 +19,10 @@
 #include "bbcp_MD5_openssl.h"
 
 #ifndef BBCP_BIG_ENDIAN
-void bbcp_MD5_openssl::byteReverse(unsigned char *buf, unsigned longs) {} /* Nothing */
+
+void bbcp_MD5_openssl::byteReverse(unsigned char* buf, unsigned longs)
+{
+} /* Nothing */
 #else
 #ifndef ASM_MD5
 /*
@@ -30,9 +33,9 @@ void bbcp_MD5_openssl::byteReverse(unsigned char *buf, unsigned longs)
     uint32 t;
     do {
         t = (uint32) ((unsigned) buf[3] << 8 | buf[2]) << 16 |
-	    ((unsigned) buf[1] << 8 | buf[0]);
+        ((unsigned) buf[1] << 8 | buf[0]);
         *(uint32 *) buf = t;
-	buf += 4;
+    buf += 4;
     } while (--longs);
 }
 #endif
@@ -42,7 +45,8 @@ void bbcp_MD5_openssl::byteReverse(unsigned char *buf, unsigned longs)
  * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
  * initialization constants.
  */
-void bbcp_MD5_openssl::MD5Init(MD5_CTX *ctx) {
+void bbcp_MD5_openssl::MD5Init(MD5_CTX* ctx)
+{
     MD5_Init(ctx);
 }
 
@@ -50,7 +54,8 @@ void bbcp_MD5_openssl::MD5Init(MD5_CTX *ctx) {
  * Update context to reflect the concatenation of another buffer full
  * of bytes.
  */
-void bbcp_MD5_openssl::MD5Update(MD5_CTX *ctx, unsigned char const *buf, unsigned len) {
+void bbcp_MD5_openssl::MD5Update(MD5_CTX* ctx, unsigned char const* buf, unsigned len)
+{
     MD5_Update(ctx, buf, len);
 }
 
@@ -58,8 +63,8 @@ void bbcp_MD5_openssl::MD5Update(MD5_CTX *ctx, unsigned char const *buf, unsigne
  * Final wrapup - pad to 64-byte boundary with the bit pattern 
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
-void bbcp_MD5_openssl::MD5Final(unsigned char digest[16], MD5_CTX *ctx)
-{    
+void bbcp_MD5_openssl::MD5Final(unsigned char digest[16], MD5_CTX* ctx)
+{
     MD5_Final(digest, ctx);
 }
 
@@ -75,7 +80,7 @@ void bbcp_MD5_openssl::MD5Final(unsigned char digest[16], MD5_CTX *ctx)
 
 /* This is the central step in the MD5 algorithm. */
 #define MD5STEP(f, w, x, y, z, data, s) \
-	( w += f(x, y, z) + data,  w = w<<s | w>>(32-s),  w += x )
+    ( w += f(x, y, z) + data,  w = w<<s | w>>(32-s),  w += x )
 
 /*
  * The core of the MD5 algorithm, this alters an existing MD5 hash to

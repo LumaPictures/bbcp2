@@ -40,49 +40,68 @@
 // overrides the methods provided in this class. The I/O class is returned
 // by the FileSystem class and is particular to each filesystem.
 //
-  
-class bbcp_IO
-{
+
+class bbcp_IO {
 public:
 
-virtual int          Close();
+    virtual int Close();
 
-        int          FD() {return iofd;}
+    int FD()
+    {
+        return iofd;
+    }
 
-virtual long long    ioStats() {return xfrbytes;}
+    virtual long long ioStats()
+    {
+        return xfrbytes;
+    }
 
-virtual long long    ioStats(double &iotime)
-                            {xfrtime.Report(iotime); return xfrbytes;}
+    virtual long long ioStats(double& iotime)
+    {
+        xfrtime.Report(iotime);
+        return xfrbytes;
+    }
 
-virtual void         Log(const char *rk, const char *wk);
+    virtual void Log(const char* rk, const char* wk);
 
-virtual int          Seek(long long offv);
+    virtual int Seek(long long offv);
 
-virtual ssize_t      Read(char *buff, size_t rdsz);
+    virtual ssize_t Read(char* buff, size_t rdsz);
 
-virtual ssize_t      Read(const struct iovec *iovp, int iovn);
+    virtual ssize_t Read(const struct iovec* iovp, int iovn);
 
-virtual ssize_t      Write(char *buff, size_t wrsz);
+    virtual ssize_t Write(char* buff, size_t wrsz);
 
-virtual ssize_t      Write(char *buff, size_t wrsz, off_t offs);
+    virtual ssize_t Write(char* buff, size_t wrsz, off_t offs);
 
-virtual ssize_t      Write(const struct iovec *iovp, int iovn);
+    virtual ssize_t Write(const struct iovec* iovp, int iovn);
 
-             bbcp_IO(int fd=-1)
-                    : RKeyA(0), RKeyZ(0), WKeyA(0), WKeyZ(0),
-                      xfrbytes(0), xfrseek(0), iofd(fd) {}
-virtual     ~bbcp_IO()          {Close();
-                                 if (RKeyA) free(RKeyA);
-                                 if (RKeyZ) free(RKeyZ);
-                                 if (WKeyA) free(WKeyA);
-                                 if (WKeyZ) free(WKeyZ);
-                                }
+    bbcp_IO(int fd = -1)
+        : RKeyA(0), RKeyZ(0), WKeyA(0), WKeyZ(0),
+          xfrbytes(0), xfrseek(0), iofd(fd)
+    {
+    }
+
+    virtual     ~bbcp_IO()
+    {
+        Close();
+        if (RKeyA)
+            free(RKeyA);
+        if (RKeyZ)
+            free(RKeyZ);
+        if (WKeyA)
+            free(WKeyA);
+        if (WKeyZ)
+            free(WKeyZ);
+    }
+
 protected:
 
-char      *RKeyA, *RKeyZ, *WKeyA, *WKeyZ;
-bbcp_Timer xfrtime;
-long long  xfrbytes;
-long long  xfrseek;
-int        iofd;
+    char* RKeyA, * RKeyZ, * WKeyA, * WKeyZ;
+    bbcp_Timer xfrtime;
+    long long xfrbytes;
+    long long xfrseek;
+    int iofd;
 };
+
 #endif

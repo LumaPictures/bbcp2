@@ -30,34 +30,40 @@
 #include <pthread.h>
 
 class bbcp_FileSystem;
+
 class bbcp_Semaphore;
-  
-class bbcp_RTCopy
-{
+
+class bbcp_RTCopy {
 public:
 
-void     *Lock(bbcp_Semaphore *semP);
+    void* Lock(bbcp_Semaphore* semP);
 
-long long Prep(long long rdsk, int rdsz, ssize_t &rlen);
+    long long Prep(long long rdsk, int rdsz, ssize_t& rlen);
 
-int       Start(bbcp_FileSystem *fsp, const char *iofn, int iofd);
+    int Start(bbcp_FileSystem* fsp, const char* iofn, int iofd);
 
-void      Stop();
+    void Stop();
 
-          bbcp_RTCopy() : FSp(0), xLim(0), Left(0), lkFN(0), lkFD(-1),
-                          Blok(0), Grow(0), ioFD(-1), Tid(0) {}
-         ~bbcp_RTCopy() {} // Never gets deleted
+    bbcp_RTCopy() : FSp(0), xLim(0), Left(0), lkFN(0), lkFD(-1),
+                    Blok(0), Grow(0), ioFD(-1), Tid(0)
+    {
+    }
+
+    ~bbcp_RTCopy()
+    {
+    } // Never gets deleted
 
 private:
 
-bbcp_FileSystem *FSp;
-long long        xLim;
-long long        Left;
-const char      *lkFN;
-int              lkFD;
-int              Blok;
-int              Grow;
-int              ioFD;
-pthread_t        Tid;
+    bbcp_FileSystem* FSp;
+    long long xLim;
+    long long Left;
+    const char* lkFN;
+    int lkFD;
+    int Blok;
+    int Grow;
+    int ioFD;
+    pthread_t Tid;
 };
+
 #endif

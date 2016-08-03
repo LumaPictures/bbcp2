@@ -26,7 +26,7 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 #include <unistd.h>
 #include <sys/uio.h>
 #include "bbcp_Timer.h"
@@ -35,26 +35,29 @@
 
 class bbcp_LogFiler;
 
-class bbcp_LogFile
-{
-friend class bbcp_LogFiler;
+class bbcp_LogFile {
+    friend class bbcp_LogFiler;
 
 public:
 
-       int  Open(const char *fname);
+    int Open(const char* fname);
 
-       void Monitor(int fdnum, char *fdname);
+    void Monitor(int fdnum, char* fdname);
 
-static void Record(bbcp_LogFiler *lfP);
+    static void Record(bbcp_LogFiler* lfP);
 
-            bbcp_LogFile() : Logfd(-1), Logfn(0), Loggers(0) {}
-           ~bbcp_LogFile();
+    bbcp_LogFile() : Logfd(-1), Logfn(0), Loggers(0)
+    {
+    }
+
+    ~bbcp_LogFile();
 
 private:
 
-bbcp_Mutex     Flog;
-int            Logfd;
-char          *Logfn;
-bbcp_LogFiler *Loggers;
+    bbcp_Mutex Flog;
+    int Logfd;
+    char* Logfn;
+    bbcp_LogFiler* Loggers;
 };
+
 #endif

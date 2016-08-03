@@ -37,32 +37,52 @@ class bbcp_Timer {
 
 public:
 
-       int  Format(char *tbuff);
+    int Format(char* tbuff);
 
-inline void Report(unsigned int  &Total_Time) // Report in milliseconds
-                   {Total_Time = static_cast<unsigned int>(TotalTime/1000);}
+    inline void Report(unsigned int& Total_Time) // Report in milliseconds
+    {
+        Total_Time = static_cast<unsigned int>(TotalTime / 1000);
+    }
 
-inline void Report(long     long &Total_Time) // Report in microseconds
-                   {Total_Time = TotalTime;}
+    inline void Report(long long& Total_Time) // Report in microseconds
+    {
+        Total_Time = TotalTime;
+    }
 
-inline void Report(double        &Total_Time) // Report in millisecond
-                   {Total_Time = static_cast<double>(TotalTime)/1000.0;}
+    inline void Report(double& Total_Time) // Report in millisecond
+    {
+        Total_Time = static_cast<double>(TotalTime) / 1000.0;
+    }
 
-inline void Reset()   {TotalTime = 0; gettimeofday(&StopWatch, 0);}
+    inline void Reset()
+    {
+        TotalTime = 0;
+        gettimeofday(&StopWatch, 0);
+    }
 
-inline void Start()   {gettimeofday(&StopWatch, 0);}
+    inline void Start()
+    {
+        gettimeofday(&StopWatch, 0);
+    }
 
-       void Stop();
+    void Stop();
 
-       void Wait(int       milliseconds);
+    void Wait(int milliseconds);
 
-       void Wait(long long microseconds);
+    void Wait(long long microseconds);
 
-       bbcp_Timer() {Reset();}
-      ~bbcp_Timer() {}
+    bbcp_Timer()
+    {
+        Reset();
+    }
+
+    ~bbcp_Timer()
+    {
+    }
 
 private:
-      long long      TotalTime;     // Total time so far in microseconds
-      struct timeval StopWatch;     // Current running clock
+    long long TotalTime;     // Total time so far in microseconds
+    struct timeval StopWatch;     // Current running clock
 };
+
 #endif

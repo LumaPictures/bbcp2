@@ -24,7 +24,7 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 #include "bbcp_Headers.h"
 #include "bbcp_FS_Null.h"
 #include "bbcp_FS_Pipe.h"
@@ -38,21 +38,24 @@
 /******************************************************************************/
 /*                    b b c p _ g e t F i l e S y s t e m                     */
 /******************************************************************************/
-  
-bbcp_FileSystem *bbcp_FileSystem::getFS(const char *path, int Opts)
+
+bbcp_FileSystem* bbcp_FileSystem::getFS(const char* path, int Opts)
 {
 
-   static bbcp_FS_Null bbcp_NULL;
-   static bbcp_FS_Pipe bbcp_PIPE;
-   static bbcp_FS_Unix bbcp_UFS;
+    static bbcp_FS_Null bbcp_NULL;
+    static bbcp_FS_Pipe bbcp_PIPE;
+    static bbcp_FS_Unix bbcp_UFS;
 
 // Simply try each supported filesystem (add more as they are defined)
 //
-   if (bbcp_NULL.Applicable(path))  return (bbcp_FileSystem *)&bbcp_NULL;
-   if (Opts & getFS_Pipe)           return (bbcp_FileSystem *)&bbcp_PIPE;
-   if (bbcp_UFS.Applicable(path))   return (bbcp_FileSystem *)&bbcp_UFS;
+    if (bbcp_NULL.Applicable(path))
+        return (bbcp_FileSystem*)&bbcp_NULL;
+    if (Opts & getFS_Pipe)
+        return (bbcp_FileSystem*)&bbcp_PIPE;
+    if (bbcp_UFS.Applicable(path))
+        return (bbcp_FileSystem*)&bbcp_UFS;
 
 // All done, nothing is applicable
 //
-   return (bbcp_FileSystem *)0;
+    return (bbcp_FileSystem*)0;
 }

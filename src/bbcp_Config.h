@@ -34,66 +34,65 @@
 
 class bbcp_Args;
 
-class bbcp_Config
-{
+class bbcp_Config {
 public:
 
-long long     Options;
-int           bindtries;
-int           bindwait;
-int           Mode;
-int           ModeD;
-int           ModeDC;
-int           Streams;
-int           BAdd;
-int           Bfact;
-int           BNum;
-int           Progint;
-int           Complvl;
-int           Wsize;
-int           MaxWindow;
-int           MaxSegSz;
-int           Xrate;
-int           RWBsz;
+    long long Options;
+    int bindtries;
+    int bindwait;
+    int Mode;
+    int ModeD;
+    int ModeDC;
+    int Streams;
+    int BAdd;
+    int Bfact;
+    int BNum;
+    int Progint;
+    int Complvl;
+    int Wsize;
+    int MaxWindow;
+    int MaxSegSz;
+    int Xrate;
+    int RWBsz;
 
-char         *SrcBuff;
-char         *SrcBase;
-int           SrcBlen;
-char         *SrcUser;
-char         *SrcHost;
-char         *SrcXeq;
-char         *SrAddr;
-char         *SnkXeq;
-char         *Logurl;
-char         *CBhost;
-int           CBport;
-char         *SecToken;
-char         *MyAddr;
-char         *MyHost;
-char         *MyUser;
-char         *MyProg;
-char         *CKPdir;
-char         *IDfn;
-char         *Logfn;
-char         *LogSpec;
-char         *RepSpec;
-char         *SynSpec;
-char         *PorSpec;
-bbcp_LogFile *MLog;
-char         *CopyOpts;
-char         *CopyOSrc;
-char         *CopyOTrg;
-int           lastseqno;
-int           TimeLimit;
-int           MTLevel;
+    char* SrcBuff;
+    char* SrcBase;
+    int SrcBlen;
+    char* SrcUser;
+    char* SrcHost;
+    char* SrcXeq;
+    char* SrAddr;
+    char* SnkXeq;
+    char* Logurl;
+    char* CBhost;
+    int CBport;
+    char* SecToken;
+    char* MyAddr;
+    char* MyHost;
+    char* MyUser;
+    char* MyProg;
+    char* CKPdir;
+    char* IDfn;
+    char* Logfn;
+    char* LogSpec;
+    char* RepSpec;
+    char* SynSpec;
+    char* PorSpec;
+    bbcp_LogFile* MLog;
+    char* CopyOpts;
+    char* CopyOSrc;
+    char* CopyOTrg;
+    int lastseqno;
+    int TimeLimit;
+    int MTLevel;
 
-char         *rtSpec;
-char         *rtLockf;
-int           rtCheck;
-int           rtLimit;
-int           rtLockd;
+    char* rtSpec;
+    char* rtLockf;
+    int rtCheck;
+    int rtLimit;
+    int rtLockd;
 
-int           csOpts;
+    int csOpts;
 #define bbcp_csVerIn  0x00000001
 #define bbcp_csVerOut 0x00000002
 #define bbcp_csVerIO  0x00000004
@@ -103,79 +102,111 @@ int           csOpts;
 #define bbcp_csLink   0x00000080
 #define bbcp_csDashE  0x00000800
 
-int           csSize;
-int           csType;
+    int csSize;
+    int csType;
 #define bbcp_csNOP    0
 #define bbcp_csA32    1
 #define bbcp_csC32    2
 #define bbcp_csMD5    3
 
-int           csFD;
-char         *csPath;
-char         *csSpec;
-char          csName[8];
-char          csValue[16];
-char          csString[44];
+    int csFD;
+    char* csPath;
+    char* csSpec;
+    char csName[8];
+    char csValue[16];
+    char csString[44];
 
-char          ubSpec[4];
-char          upSpec[4];
+    char ubSpec[4];
+    char upSpec[4];
 
-bbcp_FileSpec  *slkPath;
-bbcp_FileSpec  *srcPath;
-bbcp_FileSpec  *srcSpec;
-bbcp_FileSpec  *srcLast;
-bbcp_FileSpec  *snkSpec;
+    bbcp_FileSpec* slkPath;
+    bbcp_FileSpec* srcPath;
+    bbcp_FileSpec* srcSpec;
+    bbcp_FileSpec* srcLast;
+    bbcp_FileSpec* snkSpec;
 
-const char *SrcArg;
-const char *SnkArg;
+    const char* SrcArg;
+    const char* SnkArg;
 
-void  Arguments(int argc, char **argv, int cfgfd=-1);
-int   ConfigInit(int argc, char **argv);
-int   Configure(const char *cfn);
-void  Display();
-void  setCS(char *buff);
-void  setRWB(int rwbsz);
-int   a2sz(const char *etxt, char *item, int  &result, int  minv, int  maxv);
-int   a2tm(const char *etxt, char *item, int  &result, int  minv, int  maxv);
-int   a2ll(const char *etxt, char *item, long long &result,
-                         long long minv, long long maxv);
-int   a2n(const char *etxt, char *item, int  &result, int  minv, int  maxv);
-int   a2o(const char *etxt, char *item, int  &result, int  minv, int  maxv);
-int   a2x(char *result, char *item, int ilen);
-char *n2a(int  val, char *buff, const char *fmt="%d");
-char *n2a(long long  val, char *buff, const char *fmt="%lld");
-void  WAMsg(const char *who, const char *act, int newsz);
+    void Arguments(int argc, char** argv, int cfgfd = -1);
 
-static const char *Scale(double &xVal);
+    int ConfigInit(int argc, char** argv);
 
-      bbcp_Config();
-     ~bbcp_Config();
+    int Configure(const char* cfn);
+
+    void Display();
+
+    void setCS(char* buff);
+
+    void setRWB(int rwbsz);
+
+    int a2sz(const char* etxt, char* item, int& result, int minv, int maxv);
+
+    int a2tm(const char* etxt, char* item, int& result, int minv, int maxv);
+
+    int a2ll(const char* etxt, char* item, long long& result,
+             long long minv, long long maxv);
+
+    int a2n(const char* etxt, char* item, int& result, int minv, int maxv);
+
+    int a2o(const char* etxt, char* item, int& result, int minv, int maxv);
+
+    int a2x(char* result, char* item, int ilen);
+
+    char* n2a(int val, char* buff, const char* fmt = "%d");
+
+    char* n2a(long long val, char* buff, const char* fmt = "%lld");
+
+    void WAMsg(const char* who, const char* act, int newsz);
+
+    static const char* Scale(double& xVal);
+
+    bbcp_Config();
+
+    ~bbcp_Config();
 
 private:
-char *OPp;
-void  Cleanup(int rc, char *cfgfn, int cfgfd);
-void  Config_Ctl(int);
-void  Config_Xeq(int);
-int   EOpts(char *Opts);
-void  help(int rc);
-int   HostAndPort(const char *what, char *path, char *buff, int bsz);
-int   LogOpts(char *opts);
-void  ParseSB(char *spec);
-int   ROpts(char *Opts);
-int   ROptsErr(char *Opts);
-char *Rtoken(void);
-int   setIPV4(char *Opts);
-void  setOpts(bbcp_Args &Args);
-int   setPorts(char *pspec);
-char *tohex(char *inbuff, int inlen, char *outbuff);
-int   Unbuff(char *Opts);
-int   Unpipe(char *Opts);
+    char* OPp;
+
+    void Cleanup(int rc, char* cfgfn, int cfgfd);
+
+    void Config_Ctl(int);
+
+    void Config_Xeq(int);
+
+    int EOpts(char* Opts);
+
+    void help(int rc);
+
+    int HostAndPort(const char* what, char* path, char* buff, int bsz);
+
+    int LogOpts(char* opts);
+
+    void ParseSB(char* spec);
+
+    int ROpts(char* Opts);
+
+    int ROptsErr(char* Opts);
+
+    char* Rtoken(void);
+
+    int setIPV4(char* Opts);
+
+    void setOpts(bbcp_Args& Args);
+
+    int setPorts(char* pspec);
+
+    char* tohex(char* inbuff, int inlen, char* outbuff);
+
+    int Unbuff(char* Opts);
+
+    int Unpipe(char* Opts);
 };
 
 /******************************************************************************/
 /*                   O p t i o n   D e f i n o i t i o n s                    */
 /******************************************************************************/
-  
+
 #define bbcp_APPEND   0x0000000000000001LL
 #define bbcp_COMPRESS 0x0000000000000002LL
 #define bbcp_NOUNLINK 0x0000000000000004LL

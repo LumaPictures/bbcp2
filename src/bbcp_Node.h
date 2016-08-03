@@ -35,70 +35,106 @@
 #include "bbcp_ProcMon.h"
 #include "bbcp_Stream.h"
 
-class  bbcp_Protocol;
-class  bbcp_ZCX;
-  
-class bbcp_Node
-{
+class bbcp_Protocol;
+
+class bbcp_ZCX;
+
+class bbcp_Node {
 public:
 
-void   Detach() {NStream.Detach(); dlcount = 0; data_link[0] = 0;}
+    void Detach()
+    {
+        NStream.Detach();
+        dlcount = 0;
+        data_link[0] = 0;
+    }
 
-int    Drain() {return NStream.Drain();}
+    int Drain()
+    {
+        return NStream.Drain();
+    }
 
-int    getBuffers(int isTrg, int isLZO=0);
+    int getBuffers(int isTrg, int isLZO = 0);
 
-char  *GetLine();
+    char* GetLine();
 
-char  *GetToken() {return NStream.GetToken();}
+    char* GetToken()
+    {
+        return NStream.GetToken();
+    }
 
-int    LastError() {return NStream.LastError();}
+    int LastError()
+    {
+        return NStream.LastError();
+    }
 
-char  *NodeName() {return nodename;}
+    char* NodeName()
+    {
+        return nodename;
+    }
 
-int    Put(const char *data, int dlen)
-          {char *dpnt[] = {(char *)data, 0}; int lpnt[] = {dlen, 0};
-           return Put(dpnt, lpnt);
-          }
-int    Put(char *data[], int dlen[]);
+    int Put(const char* data, int dlen)
+    {
+        char* dpnt[] = {(char*)data, 0};
+        int lpnt[] = {dlen, 0};
+        return Put(dpnt, lpnt);
+    }
 
-int    Run(char *user, char *host, char *prog, char *parg);
+    int Put(char* data[], int dlen[]);
 
-int    RecvFile(bbcp_FileSpec *fspec, bbcp_Node *Remote);
+    int Run(char* user, char* host, char* prog, char* parg);
 
-int    SendFile(bbcp_FileSpec *fspec);
+    int RecvFile(bbcp_FileSpec* fspec, bbcp_Node* Remote);
 
-int    Start(bbcp_Protocol *protocol, int incomming)
-            {if (incomming) return Incomming(protocol);
-                 else       return  Outgoing(protocol);
-            }
+    int SendFile(bbcp_FileSpec* fspec);
 
-void   Stop(int Report=0);
+    int Start(bbcp_Protocol* protocol, int incomming)
+    {
+        if (incomming)
+            return Incomming(protocol);
+        else
+            return Outgoing(protocol);
+    }
 
-int    Wait(bbcp_Node *other=0);
+    void Stop(int Report = 0);
 
-int       TotFiles;
-long long TotBytes;
+    int Wait(bbcp_Node* other = 0);
 
-       bbcp_Node(bbcp_Link *netLink=0);
-      ~bbcp_Node() {Stop(); if (nodename) free(nodename);}
+    int TotFiles;
+    long long TotBytes;
+
+    bbcp_Node(bbcp_Link* netLink = 0);
+
+    ~bbcp_Node()
+    {
+        Stop();
+        if (nodename)
+            free(nodename);
+    }
 
 private:
 
-bbcp_ProcMon Parent_Monitor;
-bbcp_Link   *data_link[BBCP_MAXSTREAMS];
-bbcp_File   *comp1File, *comp2File;
-bbcp_Stream NStream;
-char       *nodename;
-int         dlcount;
-int         iocount;
+    bbcp_ProcMon Parent_Monitor;
+    bbcp_Link* data_link[BBCP_MAXSTREAMS];
+    bbcp_File* comp1File, * comp2File;
+    bbcp_Stream NStream;
+    char* nodename;
+    int dlcount;
+    int iocount;
 
-void       chkWsz(int fd, int Final=0);
-int        Incomming(bbcp_Protocol *protocol);
-int         Outgoing(bbcp_Protocol *protocol);
-int        Recover(const char *who);
-void       Report(double, bbcp_FileSpec *, bbcp_File *, bbcp_ZCX *);
-bbcp_ZCX  *setup_CX(int deflating, int iofd);
-int        Usage(const char *who, char *buff, int blen);
+    void chkWsz(int fd, int Final = 0);
+
+    int Incomming(bbcp_Protocol* protocol);
+
+    int Outgoing(bbcp_Protocol* protocol);
+
+    int Recover(const char* who);
+
+    void Report(double, bbcp_FileSpec*, bbcp_File*, bbcp_ZCX*);
+
+    bbcp_ZCX* setup_CX(int deflating, int iofd);
+
+    int Usage(const char* who, char* buff, int blen);
 };
+
 #endif

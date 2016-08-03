@@ -26,19 +26,23 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
-class bbcp_Version
-      {public:
-       const char  *Copyright;
-       const char  *Author;
-       const char  *Version;
-       const char  *VData;
 
-             int    Check(char *vno);
+class bbcp_Version {
+public:
+    const char* Copyright;
+    const char* Author;
+    const char* Version;
+    const char* VData;
 
-             int    Verify(char *node, char *vno);
+    int Check(char* vno);
 
-      ~bbcp_Version() {}
-       bbcp_Version();
-       };
+    int Verify(char* node, char* vno);
+
+    ~bbcp_Version()
+    {
+    }
+
+    bbcp_Version();
+};
+
 #endif

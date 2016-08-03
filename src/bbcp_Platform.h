@@ -69,7 +69,7 @@
      (rpnt = getservbyname(name, stype))
 
 #endif
-  
+
 #ifdef LINUX
 
 // The value should be MAX_IOVEC but it's not defined in Linux, sigh
@@ -101,13 +101,13 @@
 #define GETSERVBYNAME(name, stype, psrv, buff, blen,  rpnt) \
      (rpnt = getservbyname(name, stype))
 #else
-#define GETHOSTBYNAME(hname, rbuff, cbuff, cblen,  rpnt, pretc) \
+#define GETHOSTBYNAME(hname, rbuff, cbuff, cblen, rpnt, pretc) \
      (gethostbyname_r(hname, rbuff, cbuff, cblen, &rpnt, pretc) == 0 && rpnt)
 
-#define GETHOSTBYADDR(haddr,hlen,htype,rbuff,cbuff,cblen, rpnt,pretc) \
+#define GETHOSTBYADDR(haddr, hlen, htype, rbuff, cbuff, cblen, rpnt, pretc) \
      (gethostbyaddr_r(haddr,hlen,htype,rbuff,cbuff,cblen,&rpnt,pretc) == 0 && rpnt)
 
-#define GETSERVBYNAME(name, stype, psrv, buff, blen,  rpnt) \
+#define GETSERVBYNAME(name, stype, psrv, buff, blen, rpnt) \
      (getservbyname_r(name, stype, psrv, buff, blen, &rpnt) == 0 && rpnt)
 #endif
 
@@ -134,8 +134,8 @@
 
 #endif
 
-typedef       void * gsval_t;
-typedef       void * ssval_t;
+typedef void* gsval_t;
+typedef void* ssval_t;
 typedef size_t Size_T;
 
 #ifdef FREEBSD

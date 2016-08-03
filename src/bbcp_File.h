@@ -37,95 +37,143 @@
 // a "file". The actual I/O are determined by the associated filesystem and
 // are specified during instantiation.
 
-class  bbcp_FileChkSum;
-class  bbcp_FileSystem;
+class bbcp_FileChkSum;
 
-class bbcp_File
-{
+class bbcp_FileSystem;
+
+class bbcp_File {
 public:
 
 // Return target file system
 //
-bbcp_FileSystem *Fsys() {return FSp;}
+    bbcp_FileSystem* Fsys()
+    {
+        return FSp;
+    }
 
 // Return FD number
 //
-int          ioFD() {return IOB->FD();}
+    int ioFD()
+    {
+        return IOB->FD();
+    }
 
 // Read a record from a file
 //
-ssize_t      Get(char *buff, size_t blen) {return IOB->Read(buff, blen);}
+    ssize_t Get(char* buff, size_t blen)
+    {
+        return IOB->Read(buff, blen);
+    }
 
 // Internal buffer-to-buffer passthrough function
 //
-int          Passthru(bbcp_BuffPool *iBP, bbcp_BuffPool *oBP,
-                      bbcp_FileChkSum *csP, int nstrms);
+    int Passthru(bbcp_BuffPool* iBP, bbcp_BuffPool* oBP,
+                 bbcp_FileChkSum* csP, int nstrms);
 
 // Return path to the file
 //
-char        *Path() {return iofn;}
+    char* Path()
+    {
+        return iofn;
+    }
 
 // Write a record to a file
 //
-ssize_t      Put(char *buff, size_t blen) {return IOB->Write(buff, blen);}
+    ssize_t Put(char* buff, size_t blen)
+    {
+        return IOB->Write(buff, blen);
+    }
 
 // Read_All() reads the file until eof and returns 0 (success) or -errno.
 //
-int          Read_All(bbcp_BuffPool &buffpool, int Bfact);
+    int Read_All(bbcp_BuffPool& buffpool, int Bfact);
 
 // Write_All() writes the file until eof and return 0 (success) or -errno.
 //
-int          Write_All(bbcp_BuffPool &buffpool, int nstrms);
+    int Write_All(bbcp_BuffPool& buffpool, int nstrms);
 
 // Sets the file pointer to read or write from an offset
 //
-int          Seek(long long offv) {nextoffset = offv; return IOB->Seek(offv);}
+    int Seek(long long offv)
+    {
+        nextoffset = offv;
+        return IOB->Seek(offv);
+    }
 
 // setSize() sets the expected file size
 //
-void         setSize(long long top) {lastoff = top;}
+    void setSize(long long top)
+    {
+        lastoff = top;
+    }
 
 // Stats() reports the i/o time and buffer wait time in milliseconds and
 //         returns the total number of bytes transfered.
 //
-long long    Stats(double &iotime) {return IOB->ioStats(iotime);}
+    long long Stats(double& iotime)
+    {
+        return IOB->ioStats(iotime);
+    }
 
-long long    Stats()               {return IOB->ioStats();}
+    long long Stats()
+    {
+        return IOB->ioStats();
+    }
 
-             bbcp_File(const char *path, bbcp_IO *iox,
-                       bbcp_FileSystem *fsp, int secSize=0);
+    bbcp_File(const char* path, bbcp_IO* iox,
+              bbcp_FileSystem* fsp, int secSize = 0);
 
-            ~bbcp_File() {if (iofn) {free(iofn); iofn = 0;}
-                          if (IOB)  {delete IOB; IOB  = 0;}
-                         }
+    ~bbcp_File()
+    {
+        if (iofn)
+        {
+            free(iofn);
+            iofn = 0;
+        }
+        if (IOB)
+        {
+            delete IOB;
+            IOB = 0;
+        }
+    }
 
-int          bufreorders;
-int          maxreorders;
+    int bufreorders;
+    int maxreorders;
 
 private:
 
-bbcp_Buffer     *nextbuff;
-long long        nextoffset;
-long long        lastoff;
-long long        bytesLeft;
-long long        blockSize;
-long long        PaceTime;
-bbcp_Timer       Ticker;
-int              rtCopy;
-int              curq;
-bbcp_IO         *IOB;
-bbcp_FileSystem *FSp;
-char            *iofn;
+    bbcp_Buffer* nextbuff;
+    long long nextoffset;
+    long long lastoff;
+    long long bytesLeft;
+    long long blockSize;
+    long long PaceTime;
+    bbcp_Timer Ticker;
+    int rtCopy;
+    int curq;
+    bbcp_IO* IOB;
+    bbcp_FileSystem* FSp;
+    char* iofn;
 
-bbcp_Buffer *getBuffer(long long offset);
-int          Read_Direct (bbcp_BuffPool *inB, bbcp_BuffPool *otP);
-int          Read_Pipe   (bbcp_BuffPool *inB, bbcp_BuffPool *otP);
-int          Read_Normal (bbcp_BuffPool *inB, bbcp_BuffPool *otP);
-int          Read_Vector (bbcp_BuffPool *inB, bbcp_BuffPool *otP, int vN);
-void         Read_Wait   (int rdsz);
-void         Read_Wait   ();
-int          verChkSum(bbcp_FileChkSum *csP);
-int          Write_Direct(bbcp_BuffPool *iBP, bbcp_BuffPool *oBP, int nstrms);
-int          Write_Normal(bbcp_BuffPool *iBP, bbcp_BuffPool *oBP, int nstrms);
+    bbcp_Buffer* getBuffer(long long offset);
+
+    int Read_Direct(bbcp_BuffPool* inB, bbcp_BuffPool* otP);
+
+    int Read_Pipe(bbcp_BuffPool* inB, bbcp_BuffPool* otP);
+
+    int Read_Normal(bbcp_BuffPool* inB, bbcp_BuffPool* otP);
+
+    int Read_Vector(bbcp_BuffPool* inB, bbcp_BuffPool* otP, int vN);
+
+    void Read_Wait(int rdsz);
+
+    void Read_Wait();
+
+    int verChkSum(bbcp_FileChkSum* csP);
+
+    int Write_Direct(bbcp_BuffPool* iBP, bbcp_BuffPool* oBP, int nstrms);
+
+    int Write_Normal(bbcp_BuffPool* iBP, bbcp_BuffPool* oBP, int nstrms);
 };
+
 #endif

@@ -26,84 +26,138 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 #include <errno.h>
 #include <pthread.h>
 #include <time.h>
 #include <semaphore.h>
 
-class bbcp_CondVar
-{
+class bbcp_CondVar {
 public:
 
-inline void  Lock()           {pthread_mutex_lock(&cmut);}
+    inline void Lock()
+    {
+        pthread_mutex_lock(&cmut);
+    }
 
-inline void  Signal()         {if (relMutex) pthread_mutex_lock(&cmut);
-                               pthread_cond_signal(&cvar);
-                               if (relMutex) pthread_mutex_unlock(&cmut);
-                              }
+    inline void Signal()
+    {
+        if (relMutex)
+            pthread_mutex_lock(&cmut);
+        pthread_cond_signal(&cvar);
+        if (relMutex)
+            pthread_mutex_unlock(&cmut);
+    }
 
-inline void  Broadcast()      {if (relMutex) pthread_mutex_lock(&cmut);
-                               pthread_cond_broadcast(&cvar);
-                               if (relMutex) pthread_mutex_unlock(&cmut);
-                              }
+    inline void Broadcast()
+    {
+        if (relMutex)
+            pthread_mutex_lock(&cmut);
+        pthread_cond_broadcast(&cvar);
+        if (relMutex)
+            pthread_mutex_unlock(&cmut);
+    }
 
-inline void  UnLock()         {pthread_mutex_unlock(&cmut);}
+    inline void UnLock()
+    {
+        pthread_mutex_unlock(&cmut);
+    }
 
-       int   Wait();
-       int   Wait(int sec);
-       int   WaitMS(int msec);
+    int Wait();
 
-      bbcp_CondVar(int   relm=1 // 0->Caller will handle lock/unlock
-                  ) {pthread_cond_init(&cvar, NULL);
-                     pthread_mutex_init(&cmut, NULL);
-                     relMutex = relm;
-                    }
-     ~bbcp_CondVar() {pthread_cond_destroy(&cvar);
-                      pthread_mutex_destroy(&cmut);
-                     }
+    int Wait(int sec);
+
+    int WaitMS(int msec);
+
+    bbcp_CondVar(int relm = 1 // 0->Caller will handle lock/unlock
+    )
+    {
+        pthread_cond_init(&cvar, NULL);
+        pthread_mutex_init(&cmut, NULL);
+        relMutex = relm;
+    }
+
+    ~bbcp_CondVar()
+    {
+        pthread_cond_destroy(&cvar);
+        pthread_mutex_destroy(&cmut);
+    }
+
 private:
 
-pthread_cond_t  cvar;
-pthread_mutex_t cmut;
-int             relMutex;
+    pthread_cond_t cvar;
+    pthread_mutex_t cmut;
+    int relMutex;
 };
 
-class bbcp_Mutex
-{
+class bbcp_Mutex {
 public:
 
-inline int CondLock()
-       {if (pthread_mutex_trylock( &cs )) return 0;
+    inline int CondLock()
+    {
+        if (pthread_mutex_trylock(&cs))
+            return 0;
         return 1;
-       }
+    }
 
-inline void   Lock() {pthread_mutex_lock(&cs);}
+    inline void Lock()
+    {
+        pthread_mutex_lock(&cs);
+    }
 
-inline void UnLock() {pthread_mutex_unlock(&cs);}
+    inline void UnLock()
+    {
+        pthread_mutex_unlock(&cs);
+    }
 
-        bbcp_Mutex() {pthread_mutex_init(&cs, NULL);}
-       ~bbcp_Mutex() {pthread_mutex_destroy(&cs);}
+    bbcp_Mutex()
+    {
+        pthread_mutex_init(&cs, NULL);
+    }
+
+    ~bbcp_Mutex()
+    {
+        pthread_mutex_destroy(&cs);
+    }
 
 private:
 
-pthread_mutex_t cs;
+    pthread_mutex_t cs;
 };
 
-class bbcp_MutexMon
-{
+class bbcp_MutexMon {
 public:
 
-void    UnLock() {if (monMutex) {monMutex->UnLock(); monMutex = 0;}}
+    void UnLock()
+    {
+        if (monMutex)
+        {
+            monMutex->UnLock();
+            monMutex = 0;
+        }
+    }
 
-        bbcp_MutexMon(bbcp_Mutex *theMutex) : monMutex( theMutex)
-                     {theMutex->Lock();}
-        bbcp_MutexMon(bbcp_Mutex &theMutex) : monMutex(&theMutex)
-                     {theMutex. Lock();}
-       ~bbcp_MutexMon() {if (monMutex) {monMutex->UnLock(); monMutex = 0;}}
+    bbcp_MutexMon(bbcp_Mutex* theMutex) : monMutex(theMutex)
+    {
+        theMutex->Lock();
+    }
+
+    bbcp_MutexMon(bbcp_Mutex& theMutex) : monMutex(&theMutex)
+    {
+        theMutex.Lock();
+    }
+
+    ~bbcp_MutexMon()
+    {
+        if (monMutex)
+        {
+            monMutex->UnLock();
+            monMutex = 0;
+        }
+    }
 
 private:
-bbcp_Mutex *monMutex;
+    bbcp_Mutex* monMutex;
 };
 
 #if defined(MACOS) || defined(AIX)
@@ -129,51 +183,78 @@ int           semWait;
 
 #else
 
-class bbcp_Semaphore
-{
+class bbcp_Semaphore {
 public:
 
-inline int  CondWait()
-       {int rc;
-        do {rc=sem_trywait( &h_semaphore );} while (rc && errno==EINTR);
-           if (rc)
-              {if (errno == EBUSY) return 0;
-                  {throw "sem_CondWait() failed", errno;}
-              }
+    inline int CondWait()
+    {
+        int rc;
+        do
+        {
+            rc = sem_trywait(&h_semaphore);
+        } while (rc && errno == EINTR);
+        if (rc)
+        {
+            if (errno == EBUSY)
+                return 0;
+            { throw "sem_CondWait() failed", errno; }
+        }
         return 1;
-       }
+    }
 
-inline void Post() {if (sem_post(&h_semaphore))
-                       {throw "sem_post() failed", errno;}
-                   }
+    inline void Post()
+    {
+        if (sem_post(&h_semaphore))
+        {
+            throw "sem_post() failed", errno;
+        }
+    }
 
-inline void Wait() {int rc;
-                    do {rc=sem_wait(&h_semaphore);} while (rc && errno==EINTR);
-                    if (rc) {throw "sem_wait() failed", errno;}
-                   }
+    inline void Wait()
+    {
+        int rc;
+        do
+        {
+            rc = sem_wait(&h_semaphore);
+        } while (rc && errno == EINTR);
+        if (rc)
+        {
+            throw "sem_wait() failed", errno;
+        }
+    }
 
-  bbcp_Semaphore(int semval=1) {if (sem_init(&h_semaphore, 0, semval))
-                                   {throw "sem_init() failed", errno;}
-                               }
- ~bbcp_Semaphore() {if (sem_destroy(&h_semaphore))
-                       {throw "sem_destroy() failed", errno;}
-                   }
+    bbcp_Semaphore(int semval = 1)
+    {
+        if (sem_init(&h_semaphore, 0, semval))
+        {
+            throw "sem_init() failed", errno;
+        }
+    }
+
+    ~bbcp_Semaphore()
+    {
+        if (sem_destroy(&h_semaphore))
+        {
+            throw "sem_destroy() failed", errno;
+        }
+    }
 
 private:
 
-sem_t h_semaphore;
+    sem_t h_semaphore;
 };
+
 #endif
 
 extern "C"
 {
-int   bbcp_Thread_Cancel(pthread_t tid);
-int   bbcp_Thread_CanType(int Async);
-int   bbcp_Thread_Detach(pthread_t tid);
-void  bbcp_Thread_MT(int mtlvl);
-int   bbcp_Thread_Run(  void *(*proc)(void *), void *arg, pthread_t *tid);
-int   bbcp_Thread_Signal(pthread_t tid, int snum);
-int   bbcp_Thread_Start(void *(*proc)(void *), void *arg, pthread_t *tid);
-void *bbcp_Thread_Wait(pthread_t tid);
+int bbcp_Thread_Cancel(pthread_t tid);
+int bbcp_Thread_CanType(int Async);
+int bbcp_Thread_Detach(pthread_t tid);
+void bbcp_Thread_MT(int mtlvl);
+int bbcp_Thread_Run(void* (* proc)(void*), void* arg, pthread_t* tid);
+int bbcp_Thread_Signal(pthread_t tid, int snum);
+int bbcp_Thread_Start(void* (* proc)(void*), void* arg, pthread_t* tid);
+void* bbcp_Thread_Wait(pthread_t tid);
 }
 #endif

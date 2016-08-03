@@ -36,44 +36,67 @@
 #include "bbcp_Endian.h"
 
 typedef unsigned int uint32;
-  
-class bbcp_C32 : public bbcp_ChkSum
-{
+
+class bbcp_C32 : public bbcp_ChkSum {
 public:
 
-void  Init() {C32Result = CRC32_XINIT; TotLen = 0;}
+    void Init()
+    {
+        C32Result = CRC32_XINIT;
+        TotLen = 0;
+    }
 
-void  Update(const char *Buff, int BLen);
+    void Update(const char* Buff, int BLen);
 
-int   csSize() {return sizeof(C32Result);}
+    int csSize()
+    {
+        return sizeof(C32Result);
+    }
 
-char *Final(char **Text=0)
-               {char buff[sizeof(long long)];
-                long long tLcs = TotLen;
-                int i = 0;
-                if (tLcs)
-                   {while(tLcs) {buff[i++] = tLcs & 0xff ; tLcs >>= 8;}
-                    Update(buff, i);
-                   }
-                TheResult = C32Result ^ CRC32_XOROT;
+    char* Final(char** Text = 0)
+    {
+        char buff[sizeof(long long)];
+        long long tLcs = TotLen;
+        int i = 0;
+        if (tLcs)
+        {
+            while (tLcs)
+            {
+                buff[i++] = tLcs & 0xff;
+                tLcs >>= 8;
+            }
+            Update(buff, i);
+        }
+        TheResult = C32Result ^ CRC32_XOROT;
 #ifndef BBCP_BIG_ENDIAN
-                TheResult = htonl(TheResult);
+        TheResult = htonl(TheResult);
 #endif
-                if (Text) *Text = x2a((char *)&TheResult);
-                return (char *)&TheResult;
-               }
+        if (Text)
+            *Text = x2a((char*)&TheResult);
+        return (char*)&TheResult;
+    }
 
-const char *Type() {return "c32";}
+    const char* Type()
+    {
+        return "c32";
+    }
 
-            bbcp_C32() {Init();}
-virtual    ~bbcp_C32() {}
+    bbcp_C32()
+    {
+        Init();
+    }
+
+    virtual    ~bbcp_C32()
+    {
+    }
 
 private:
-static const uint CRC32_XINIT = 0;
-static const uint CRC32_XOROT = 0xffffffff;
-static       uint crctable[256];
-             uint C32Result;
-             uint TheResult;
-       long  long TotLen;
+    static const uint CRC32_XINIT = 0;
+    static const uint CRC32_XOROT = 0xffffffff;
+    static uint crctable[256];
+    uint C32Result;
+    uint TheResult;
+    long long TotLen;
 };
+
 #endif

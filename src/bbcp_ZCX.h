@@ -26,36 +26,42 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 #include <stdlib.h>
 
 class bbcp_BuffPool;
 
-class bbcp_ZCX
-{
+class bbcp_ZCX {
 public:
 
-long long    Bytes() {return cbytes;}
+    long long Bytes()
+    {
+        return cbytes;
+    }
 
-int          Process(void);
+    int Process(void);
 
-pthread_t    TID;
+    pthread_t TID;
 
-      bbcp_ZCX(bbcp_BuffPool *ib, bbcp_BuffPool *rb, bbcp_BuffPool *ob,
-               int clvl, int xfd, int logit);
-     ~bbcp_ZCX() {}
+    bbcp_ZCX(bbcp_BuffPool* ib, bbcp_BuffPool* rb, bbcp_BuffPool* ob,
+             int clvl, int xfd, int logit);
+
+    ~bbcp_ZCX()
+    {
+    }
 
 private:
 
-int Zfailure(int zerr, const char *oper, char *Zmsg);
+    int Zfailure(int zerr, const char* oper, char* Zmsg);
 
-bbcp_BuffPool   *Ibuff;
-bbcp_BuffPool   *Rbuff;
-bbcp_BuffPool   *Obuff;
-long long        cbytes;
-int              Clvl;
-int              iofd;
-char            *LogIDbeg;
-char            *LogIDend;
+    bbcp_BuffPool* Ibuff;
+    bbcp_BuffPool* Rbuff;
+    bbcp_BuffPool* Obuff;
+    long long cbytes;
+    int Clvl;
+    int iofd;
+    char* LogIDbeg;
+    char* LogIDend;
 };
+
 #endif

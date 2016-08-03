@@ -27,17 +27,16 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 #include "bbcp_NetAddrInfo.h"
-  
+
 //------------------------------------------------------------------------------
 //! The bbcp_NetAddr class implements the manipulators for bbcp_NetAddrInfo.
 //------------------------------------------------------------------------------
 
 struct addrinfo;
 
-class bbcp_NetAddr : public bbcp_NetAddrInfo
-{
+class bbcp_NetAddr : public bbcp_NetAddrInfo {
 public:
 
 //------------------------------------------------------------------------------
@@ -47,7 +46,10 @@ public:
 //!         False    IPV4 mode has not been set.
 //------------------------------------------------------------------------------
 
-static bool IPV4Set() {return useIPV4;}
+    static bool IPV4Set()
+    {
+        return useIPV4;
+    }
 
 //------------------------------------------------------------------------------
 //! Optionally set and also returns the port number for our address.
@@ -59,7 +61,7 @@ static bool IPV4Set() {return useIPV4;}
 //!         Failure: -1 address is not an internet address or port is invalid.
 //------------------------------------------------------------------------------
 
-int         Port(int pNum=-1);
+    int Port(int pNum = -1);
 
 //------------------------------------------------------------------------------
 //! Set the IP address and possibly the port number.
@@ -85,9 +87,9 @@ int         Port(int pNum=-1);
 //!                  persistent storage and cannot be modified.
 //------------------------------------------------------------------------------
 
-static const int PortInSpec = (int)0x80000000;
+    static const int PortInSpec = (int)0x80000000;
 
-const char *Set(const char *hSpec, int pNum=PortInSpec);
+    const char* Set(const char* hSpec, int pNum = PortInSpec);
 
 //------------------------------------------------------------------------------
 //! Set our address via a sockaddr structure.
@@ -101,7 +103,7 @@ const char *Set(const char *hSpec, int pNum=PortInSpec);
 //!                  message is in persistent storage and cannot be modified.
 //------------------------------------------------------------------------------
 
-const char *Set(const struct sockaddr *sockP, int sockFD=-1);
+    const char* Set(const struct sockaddr* sockP, int sockFD = -1);
 
 //------------------------------------------------------------------------------
 //! Set our address via getpeername() from the supplied socket file descriptor.
@@ -116,7 +118,7 @@ const char *Set(const struct sockaddr *sockP, int sockFD=-1);
 //!                  message is in persistent storage and cannot be modified.
 //------------------------------------------------------------------------------
 
-const char *Set(int sockFD, bool peer=true);
+    const char* Set(int sockFD, bool peer = true);
 
 //------------------------------------------------------------------------------
 //! Set our address via and addrinfo structure and initialize the port.
@@ -130,7 +132,7 @@ const char *Set(int sockFD, bool peer=true);
 //!                  message is in persistent storage and cannot be modified.
 //------------------------------------------------------------------------------
 
-const char *Set(struct addrinfo *rP, int port, bool mapit=false);
+    const char* Set(struct addrinfo* rP, int port, bool mapit = false);
 
 //------------------------------------------------------------------------------
 //! Force this object to work in IPV4 mode only. This method permanently sets
@@ -139,7 +141,7 @@ const char *Set(struct addrinfo *rP, int port, bool mapit=false);
 //! called before any other calls to this object (e.g. initialization time).
 //------------------------------------------------------------------------------
 
-static void SetIPV4();
+    static void SetIPV4();
 
 //------------------------------------------------------------------------------
 //! Force this object to work in IPV6 mode using IPV6 or mapped IPV4 addresses.
@@ -149,7 +151,7 @@ static void SetIPV4();
 //! (i.e. getaddrinfo() with hints AI_ADDRCONFIG|AI_V4MAPPED).
 //------------------------------------------------------------------------------
 
-static void SetIPV6();
+    static void SetIPV6();
 
 //------------------------------------------------------------------------------
 //! Set the location for this address
@@ -158,7 +160,10 @@ static void SetIPV6();
 //!              bbcp_NetAddrInfo for the definition of the stucture.
 //------------------------------------------------------------------------------
 
-void        SetLocation(bbcp_NetAddrInfo::LocInfo &loc) {addrLoc = loc;}
+    void SetLocation(bbcp_NetAddrInfo::LocInfo& loc)
+    {
+        addrLoc = loc;
+    }
 
 //------------------------------------------------------------------------------
 //! Assignment operator and copy constructor are inherited, no need to define
@@ -173,33 +178,48 @@ void        SetLocation(bbcp_NetAddrInfo::LocInfo &loc) {addrLoc = loc;}
 //!                  port number to initilize the address.
 //------------------------------------------------------------------------------
 
-            bbcp_NetAddr() : bbcp_NetAddrInfo() {}
+    bbcp_NetAddr() : bbcp_NetAddrInfo()
+    {
+    }
 
-            bbcp_NetAddr(const bbcp_NetAddr *addr) : bbcp_NetAddrInfo(addr) {}
+    bbcp_NetAddr(const bbcp_NetAddr* addr) : bbcp_NetAddrInfo(addr)
+    {
+    }
 
-            bbcp_NetAddr(const sockaddr     *addr) : bbcp_NetAddrInfo()
-                                                   {Set(addr);}
+    bbcp_NetAddr(const sockaddr* addr) : bbcp_NetAddrInfo()
+    {
+        Set(addr);
+    }
 
-            bbcp_NetAddr(const sockaddr_in  *addr) : bbcp_NetAddrInfo()
-                                                   {Set((sockaddr *)addr);}
+    bbcp_NetAddr(const sockaddr_in* addr) : bbcp_NetAddrInfo()
+    {
+        Set((sockaddr*)addr);
+    }
 
-            bbcp_NetAddr(const sockaddr_in6 *addr) : bbcp_NetAddrInfo()
-                                                   {Set((sockaddr *)addr);}
+    bbcp_NetAddr(const sockaddr_in6* addr) : bbcp_NetAddrInfo()
+    {
+        Set((sockaddr*)addr);
+    }
 
-            bbcp_NetAddr(int port);
+    bbcp_NetAddr(int port);
 
 //------------------------------------------------------------------------------
 //! Destructor
 //------------------------------------------------------------------------------
 
-           ~bbcp_NetAddr() {}
-private:
-static struct addrinfo    *Hints(int htype, int stype);
-bool                       Map64();
+    ~bbcp_NetAddr()
+    {
+    }
 
-static struct addrinfo    *hostHints;
-static struct addrinfo    *huntHintsTCP;
-static struct addrinfo    *huntHintsUDP;
-static bool                useIPV4;
+private:
+    static struct addrinfo* Hints(int htype, int stype);
+
+    bool Map64();
+
+    static struct addrinfo* hostHints;
+    static struct addrinfo* huntHintsTCP;
+    static struct addrinfo* huntHintsUDP;
+    static bool useIPV4;
 };
+
 #endif

@@ -41,7 +41,7 @@ typedef unsigned int uint32;
                    * Copyright (C) 1995-1998 Mark Adler
    Below are the zlib license terms for this implementation.
 */
-  
+
 /* zlib.h -- interface of the 'zlib' general purpose compression library
   version 1.1.4, March 11th, 2002
 
@@ -72,57 +72,94 @@ typedef unsigned int uint32;
   (zlib format), rfc1951.txt (deflate format) and rfc1952.txt (gzip format).
 */
 
-#define DO1(buf,i)  {unSum1 += buf[i]; unSum2 += unSum1;}
-#define DO2(buf,i)  DO1(buf,i); DO1(buf,i+1);
-#define DO4(buf,i)  DO2(buf,i); DO2(buf,i+2);
-#define DO8(buf,i)  DO4(buf,i); DO4(buf,i+4);
+#define DO1(buf, i)  {unSum1 += buf[i]; unSum2 += unSum1;}
+#define DO2(buf, i)  DO1(buf,i); DO1(buf,i+1);
+#define DO4(buf, i)  DO2(buf,i); DO2(buf,i+2);
+#define DO8(buf, i)  DO4(buf,i); DO4(buf,i+4);
 #define DO16(buf)   DO8(buf,0); DO8(buf,8);
 
-class bbcp_A32 : public bbcp_ChkSum
-{
+class bbcp_A32 : public bbcp_ChkSum {
 public:
 
-void  Init() {unSum1 = AdlerStart; unSum2 = 0;}
+    void Init()
+    {
+        unSum1 = AdlerStart;
+        unSum2 = 0;
+    }
 
-void  Update(const char *Buff, int BLen)
-             {unsigned char *buff = (unsigned char *)Buff;
-              while(BLen >= AdlerNMax)
-                  {BLen -= AdlerNMax; n = AdlerNCnt;
-                   do {DO16(buff); buff += 16;} while(--n);
-                   unSum1 %= AdlerBase; unSum2 %= AdlerBase;
-                  }
-            if (BLen)             // avoid modulos if none remaining
-               {while(BLen >= 16) {BLen -= 16; DO16(buff); buff += 16;}
-                while(BLen--) {unSum1 += *buff++; unSum2 += unSum1;}
-                unSum1 %= AdlerBase; unSum2 %= AdlerBase;
-               }
+    void Update(const char* Buff, int BLen)
+    {
+        unsigned char* buff = (unsigned char*)Buff;
+        while (BLen >= AdlerNMax)
+        {
+            BLen -= AdlerNMax;
+            n = AdlerNCnt;
+            do
+            {
+                DO16(buff);
+                buff += 16;
+            } while (--n);
+            unSum1 %= AdlerBase;
+            unSum2 %= AdlerBase;
+        }
+        if (BLen)             // avoid modulos if none remaining
+        {
+            while (BLen >= 16)
+            {
+                BLen -= 16;
+                DO16(buff);
+                buff += 16;
             }
+            while (BLen--)
+            {
+                unSum1 += *buff++;
+                unSum2 += unSum1;
+            }
+            unSum1 %= AdlerBase;
+            unSum2 %= AdlerBase;
+        }
+    }
 
-int   csSize() {return sizeof(AdlerResult);}
+    int csSize()
+    {
+        return sizeof(AdlerResult);
+    }
 
-char *Final(char **Text=0)
-            {AdlerResult = (unSum2 << 16) + unSum1;
+    char* Final(char** Text = 0)
+    {
+        AdlerResult = (unSum2 << 16) + unSum1;
 #ifndef BBCP_BIG_ENDIAN
-             AdlerResult = htonl(AdlerResult);
+        AdlerResult = htonl(AdlerResult);
 #endif
-             if (Text) *Text = x2a((char *)&AdlerResult);
-             return (char *)&AdlerResult;
-            }
+        if (Text)
+            *Text = x2a((char*)&AdlerResult);
+        return (char*)&AdlerResult;
+    }
 
-const char *Type() {return "a32";}
+    const char* Type()
+    {
+        return "a32";
+    }
 
-            bbcp_A32() {Init();}
-virtual    ~bbcp_A32() {}
+    bbcp_A32()
+    {
+        Init();
+    }
+
+    virtual    ~bbcp_A32()
+    {
+    }
 
 private:
-static const uint AdlerBase  = 0xFFF1;
-static const uint AdlerStart = 0x0001;
-static const uint AdlerNMax  = 5552;
+    static const uint AdlerBase = 0xFFF1;
+    static const uint AdlerStart = 0x0001;
+    static const uint AdlerNMax = 5552;
 /* NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1 */
-static const uint AdlerNCnt  = AdlerNMax/16;
-             uint AdlerResult;
-             uint unSum1;
-             uint unSum2;
-              int n;
+    static const uint AdlerNCnt = AdlerNMax / 16;
+    uint AdlerResult;
+    uint unSum1;
+    uint unSum2;
+    int n;
 };
+
 #endif

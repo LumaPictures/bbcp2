@@ -28,29 +28,42 @@
 /******************************************************************************/
 
 #include "bbcp_IO.h"
-  
-class bbcp_IO_Null : public bbcp_IO
-{
+
+class bbcp_IO_Null : public bbcp_IO {
 public:
 
-        int          Close() {return 0;}
+    int Close()
+    {
+        return 0;
+    }
 
-        int          Seek(long long offv) {return 0;}
+    int Seek(long long offv)
+    {
+        return 0;
+    }
 
-        ssize_t      Read(char *buff, size_t rdsz);
+    ssize_t Read(char* buff, size_t rdsz);
 
-        ssize_t      Read(const struct iovec *iovp, int iovn);
+    ssize_t Read(const struct iovec* iovp, int iovn);
 
-        ssize_t      Write(char *buff, size_t wrsz);
+    ssize_t Write(char* buff, size_t wrsz);
 
-        ssize_t      Write(char *buff, size_t wrsz, off_t offs)
-                          {return Write(buff, wrsz);}
+    ssize_t Write(char* buff, size_t wrsz, off_t offs)
+    {
+        return Write(buff, wrsz);
+    }
 
-        ssize_t      Write(const struct iovec *iovp, int iovn);
+    ssize_t Write(const struct iovec* iovp, int iovn);
 
-             bbcp_IO_Null(int fd) : bbcp_IO(fd) {}
-            ~bbcp_IO_Null() {}
+    bbcp_IO_Null(int fd) : bbcp_IO(fd)
+    {
+    }
+
+    ~bbcp_IO_Null()
+    {
+    }
 
 protected:
 };
+
 #endif

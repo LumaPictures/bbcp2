@@ -32,39 +32,39 @@
 #include "bbcp_Stream.h"
 
 class bbcp_Opt;
-  
-class bbcp_Args
-{
+
+class bbcp_Args {
 public:
 
-char *getarg(int newln=0);
+    char* getarg(int newln = 0);
 
-char  getopt();
+    char getopt();
 
-void  Option(const char *optw, int minl, char optv, char opta); // For extended -- options
+    void Option(const char* optw, int minl, char optv, char opta); // For extended -- options
 
-void  Options(char *opts, int fd, int moa=0);
+    void Options(char* opts, int fd, int moa = 0);
 
-void  Options(char *opts, int argc, char **argv);
+    void Options(char* opts, int argc, char** argv);
 
-      bbcp_Args(char *etxt=(char *)"Args: ");
+    bbcp_Args(char* etxt = (char*)"Args: ");
 
     ~bbcp_Args();
 
-char *argval;
+    char* argval;
 
 private:
 
-char            *epfx;
-bbcp_Opt        *optp;
-char            *vopts;
-char            *curopt;
-int              MOA;
-int              inStream;
-int              endopts;
-int              Argc;
-int              Aloc;
-char           **Argv;
-bbcp_Stream      arg_stream;
+    char* epfx;
+    bbcp_Opt* optp;
+    char* vopts;
+    char* curopt;
+    int MOA;
+    int inStream;
+    int endopts;
+    int Argc;
+    int Aloc;
+    char** Argv;
+    bbcp_Stream arg_stream;
 };
+
 #endif

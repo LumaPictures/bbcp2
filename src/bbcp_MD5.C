@@ -19,7 +19,10 @@
 #include "bbcp_MD5.h"
 
 #ifndef BBCP_BIG_ENDIAN
-void bbcp_MD5::byteReverse(unsigned char *buf, unsigned longs) {} /* Nothing */
+
+void bbcp_MD5::byteReverse(unsigned char* buf, unsigned longs)
+{
+} /* Nothing */
 #else
 #ifndef ASM_MD5
 /*
@@ -29,10 +32,10 @@ void bbcp_MD5::byteReverse(unsigned char *buf, unsigned longs)
 {
     uint32 t;
     do {
-	t = (uint32) ((unsigned) buf[3] << 8 | buf[2]) << 16 |
-	    ((unsigned) buf[1] << 8 | buf[0]);
-	*(uint32 *) buf = t;
-	buf += 4;
+    t = (uint32) ((unsigned) buf[3] << 8 | buf[2]) << 16 |
+        ((unsigned) buf[1] << 8 | buf[0]);
+    *(uint32 *) buf = t;
+    buf += 4;
     } while (--longs);
 }
 #endif
@@ -42,7 +45,7 @@ void bbcp_MD5::byteReverse(unsigned char *buf, unsigned longs)
  * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
  * initialization constants.
  */
-void bbcp_MD5::MD5Init(struct MD5Context *ctx)
+void bbcp_MD5::MD5Init(struct MD5Context* ctx)
 {
     ctx->buf[0] = 0x67452301;
     ctx->buf[1] = 0xefcdab89;
@@ -57,43 +60,46 @@ void bbcp_MD5::MD5Init(struct MD5Context *ctx)
  * Update context to reflect the concatenation of another buffer full
  * of bytes.
  */
-void bbcp_MD5::MD5Update(struct MD5Context *ctx, unsigned char const *buf, unsigned len)
+void bbcp_MD5::MD5Update(struct MD5Context* ctx, unsigned char const* buf, unsigned len)
 {
     uint32 t;
 
     /* Update bitcount */
 
     t = ctx->bits[0];
-    if ((ctx->bits[0] = t + ((uint32) len << 3)) < t)
-	ctx->bits[1]++;		/* Carry from low to high */
+    if ((ctx->bits[0] = t + ((uint32)len << 3)) < t)
+        ctx->bits[1]++;        /* Carry from low to high */
     ctx->bits[1] += len >> 29;
 
-    t = (t >> 3) & 0x3f;	/* Bytes already in shsInfo->data */
+    t = (t >> 3) & 0x3f;    /* Bytes already in shsInfo->data */
 
     /* Handle any leading odd-sized chunks */
 
-    if (t) {
-	unsigned char *p = (unsigned char *) ctx->in + t;
+    if (t)
+    {
+        unsigned char* p = (unsigned char*)ctx->in + t;
 
-	t = 64 - t;
-	if (len < t) {
-	    memcpy(p, buf, len);
-	    return;
-	}
-	memcpy(p, buf, t);
-	byteReverse(ctx->in, 16);
-	MD5Transform(ctx->buf, (uint32 *) ctx->in);
-	buf += t;
-	len -= t;
+        t = 64 - t;
+        if (len < t)
+        {
+            memcpy(p, buf, len);
+            return;
+        }
+        memcpy(p, buf, t);
+        byteReverse(ctx->in, 16);
+        MD5Transform(ctx->buf, (uint32*)ctx->in);
+        buf += t;
+        len -= t;
     }
     /* Process data in 64-byte chunks */
 
-    while (len >= 64) {
-	memcpy(ctx->in, buf, 64);
-	byteReverse(ctx->in, 16);
-	MD5Transform(ctx->buf, (uint32 *) ctx->in);
-	buf += 64;
-	len -= 64;
+    while (len >= 64)
+    {
+        memcpy(ctx->in, buf, 64);
+        byteReverse(ctx->in, 16);
+        MD5Transform(ctx->buf, (uint32*)ctx->in);
+        buf += 64;
+        len -= 64;
     }
 
     /* Handle any remaining bytes of data. */
@@ -105,10 +111,10 @@ void bbcp_MD5::MD5Update(struct MD5Context *ctx, unsigned char const *buf, unsig
  * Final wrapup - pad to 64-byte boundary with the bit pattern 
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
-void bbcp_MD5::MD5Final(unsigned char digest[16], struct MD5Context *ctx)
+void bbcp_MD5::MD5Final(unsigned char digest[16], struct MD5Context* ctx)
 {
     unsigned count;
-    unsigned char *p;
+    unsigned char* p;
 
     /* Compute number of bytes mod 64 */
     count = (ctx->bits[0] >> 3) & 0x3F;
@@ -122,26 +128,29 @@ void bbcp_MD5::MD5Final(unsigned char digest[16], struct MD5Context *ctx)
     count = 64 - 1 - count;
 
     /* Pad out to 56 mod 64 */
-    if (count < 8) {
-	/* Two lots of padding:  Pad the first block to 64 bytes */
-	memset(p, 0, count);
-	byteReverse(ctx->in, 16);
-	MD5Transform(ctx->buf, (uint32 *) ctx->in);
+    if (count < 8)
+    {
+        /* Two lots of padding:  Pad the first block to 64 bytes */
+        memset(p, 0, count);
+        byteReverse(ctx->in, 16);
+        MD5Transform(ctx->buf, (uint32*)ctx->in);
 
-	/* Now fill the next block with 56 bytes */
-	memset(ctx->in, 0, 56);
-    } else {
-	/* Pad block to 56 bytes */
-	memset(p, 0, count - 8);
+        /* Now fill the next block with 56 bytes */
+        memset(ctx->in, 0, 56);
+    }
+    else
+    {
+        /* Pad block to 56 bytes */
+        memset(p, 0, count - 8);
     }
     byteReverse(ctx->in, 14);
 
     /* Append length in bits and transform */
-    ((uint32 *) ctx->in)[14] = ctx->bits[0];
-    ((uint32 *) ctx->in)[15] = ctx->bits[1];
+    ((uint32*)ctx->in)[14] = ctx->bits[0];
+    ((uint32*)ctx->in)[15] = ctx->bits[1];
 
-    MD5Transform(ctx->buf, (uint32 *) ctx->in);
-    byteReverse((unsigned char *) ctx->buf, 4);
+    MD5Transform(ctx->buf, (uint32*)ctx->in);
+    byteReverse((unsigned char*)ctx->buf, 4);
     memcpy(digest, ctx->buf, 16);
 //  memset(ctx, 0, sizeof(ctx));	/* In case it's sensitive */
 }
@@ -158,7 +167,7 @@ void bbcp_MD5::MD5Final(unsigned char digest[16], struct MD5Context *ctx)
 
 /* This is the central step in the MD5 algorithm. */
 #define MD5STEP(f, w, x, y, z, data, s) \
-	( w += f(x, y, z) + data,  w = w<<s | w>>(32-s),  w += x )
+    ( w += f(x, y, z) + data,  w = w<<s | w>>(32-s),  w += x )
 
 /*
  * The core of the MD5 algorithm, this alters an existing MD5 hash to

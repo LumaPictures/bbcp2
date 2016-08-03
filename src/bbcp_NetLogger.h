@@ -53,23 +53,42 @@ int       openopts;
 NLhandle *nl_handle;
 };
 #else
-  
-class bbcp_NetLogger
-{
+
+class bbcp_NetLogger {
 public:
 
-int  Close() {return 0;}
+    int Close()
+    {
+        return 0;
+    }
 
-int  Emit(const char *key, const char *data, const char *fmt, ...) {return 0;}
+    int Emit(const char* key, const char* data, const char* fmt, ...)
+    {
+        return 0;
+    }
 
-int  Flush() {return 0;}
+    int Flush()
+    {
+        return 0;
+    }
 
-int  Open(const char *pgm, char *url=0, int opts=0) {return 0;}
+    int Open(const char* pgm, char* url = 0, int opts = 0)
+    {
+        return 0;
+    }
 
-int  setOpts(int opts=0) {return 0;}
+    int setOpts(int opts = 0)
+    {
+        return 0;
+    }
 
-     bbcp_NetLogger() {}
-    ~bbcp_NetLogger() {}
+    bbcp_NetLogger()
+    {
+    }
+
+    ~bbcp_NetLogger()
+    {
+    }
 
 };
 

@@ -26,7 +26,7 @@
 /* be used to endorse or promote products derived from this software without  */
 /* specific prior written permission of the institution or contributor.       */
 /******************************************************************************/
-  
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -34,41 +34,46 @@
 
 struct stat;
 
-class bbcp_FS_Unix : public bbcp_FileSystem
-{
+class bbcp_FS_Unix : public bbcp_FileSystem {
 public:
 
-int        Applicable(const char *path);
+    int Applicable(const char* path);
 
-int        Enough(long long bytes, int numfiles=1);
+    int Enough(long long bytes, int numfiles = 1);
 
-int        Fsync(const char *fn, int fd);
+    int Fsync(const char* fn, int fd);
 
-long long  getSize(int fd, long long *blksz=0);
+    long long getSize(int fd, long long* blksz = 0);
 
-bbcp_File *Open(const char *fn, int opts, int mode=0, const char *fa=0);
+    bbcp_File* Open(const char* fn, int opts, int mode = 0, const char* fa = 0);
 
-int        MKDir(const char *path, mode_t mode);
+    int MKDir(const char* path, mode_t mode);
 
-int        MKLnk(const char *ldata, const char *path);
+    int MKLnk(const char* ldata, const char* path);
 
-int        RM(const char *path);
+    int RM(const char* path);
 
-int        setGroup(const char *path, const char *Group);
+    int setGroup(const char* path, const char* Group);
 
-int        setMode(const char *path, mode_t mode);
+    int setMode(const char* path, mode_t mode);
 
-int        setTimes(const char *path, time_t atime, time_t mtime);
+    int setTimes(const char* path, time_t atime, time_t mtime);
 
-int        Stat(const char *path, bbcp_FileInfo *finfo=0);
+    int Stat(const char* path, bbcp_FileInfo* finfo = 0);
 
-int        Stat(const char *path, const char *dent, int fd,
-                int nolnks=1, bbcp_FileInfo *finfo=0);
+    int Stat(const char* path, const char* dent, int fd,
+             int nolnks = 1, bbcp_FileInfo* finfo = 0);
 
-           bbcp_FS_Unix() {}
-          ~bbcp_FS_Unix() {}
+    bbcp_FS_Unix()
+    {
+    }
+
+    ~bbcp_FS_Unix()
+    {
+    }
 
 protected:
-int        Stat(struct stat &xbuff, bbcp_FileInfo *sbuff);
+    int Stat(struct stat& xbuff, bbcp_FileInfo* sbuff);
 };
+
 #endif

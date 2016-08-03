@@ -32,63 +32,72 @@
 /*                         L o c a l   O b j e c t s                          */
 /******************************************************************************/
 
-namespace
-{
-bbcp_C32 kHash;
+namespace {
+    bbcp_C32 kHash;
 };
-  
+
 /******************************************************************************/
 /*                           C o n s t r u c t o r                            */
 /******************************************************************************/
-  
+
 bbcp_Set::bbcp_Set(int slots)
 {
-   int n = slots * sizeof(SetItem *);
+    int n = slots * sizeof(SetItem*);
 
 // Allocate the table
 //
-   Slots = slots;
-   SetTab = (SetItem **)malloc(n);
-   memset(SetTab, 0, n);
+    Slots = slots;
+    SetTab = (SetItem**)malloc(n);
+    memset(SetTab, 0, n);
 }
 
 /******************************************************************************/
 /*                            D e s t r u c t o r                             */
 /******************************************************************************/
-  
+
 bbcp_Set::~bbcp_Set()
 {
-   SetItem *sP, *dP;
+    SetItem* sP, * dP;
 
-   for (int i = 0; i < Slots; i++)
-       {if ((sP = SetTab[i]))
-           do {dP = sP; sP = sP->next; delete dP;} while(sP);
-       }
-   free(SetTab);
+    for (int i = 0; i < Slots; i++)
+    {
+        if ((sP = SetTab[i]))
+            do
+            {
+                dP = sP;
+                sP = sP->next;
+                delete dP;
+            } while (sP);
+    }
+    free(SetTab);
 }
 
 /******************************************************************************/
 /*                                   A d d                                    */
 /******************************************************************************/
-  
-bool bbcp_Set::Add(const char *key)
+
+bool bbcp_Set::Add(const char* key)
 {
-   SetItem *sP;
-   unsigned int hVal, kEnt;
+    SetItem* sP;
+    unsigned int hVal, kEnt;
 
 // Get the hash for the key
 //
-   hVal = *(unsigned int *)kHash.Calc(key, strlen(key));
-   kEnt = hVal % Slots;
+    hVal = *(unsigned int*)kHash.Calc(key, strlen(key));
+    kEnt = hVal % Slots;
 
 // Find the entry
 //
-   if ((sP = SetTab[kEnt]))
-      do {if (!strcmp(key, sP->key)) return false;} while((sP = sP->next));
+    if ((sP = SetTab[kEnt]))
+        do
+        {
+            if (!strcmp(key, sP->key))
+                return false;
+        } while ((sP = sP->next));
 
 // Add the item
 //
-   sP = new SetItem(key, SetTab[kEnt]);
-   SetTab[kEnt] = sP;
-   return true;
+    sP = new SetItem(key, SetTab[kEnt]);
+    SetTab[kEnt] = sP;
+    return true;
 }
