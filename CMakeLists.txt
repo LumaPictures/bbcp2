@@ -1,8 +1,10 @@
+cmake_minimum_required(VERSION 3.5)
+
 project(bbcp2)
 
 set(EXEC_NAME bbcp2)
 
-file(GLOB SRC src/*.C)
+file(GLOB SRC src/*.cpp)
 
 add_compile_options(-Dunix -D_BSD -D_ALL_SOURCE -D_REENTRANT -DOO_STD -DLINUX -Wall)
 
