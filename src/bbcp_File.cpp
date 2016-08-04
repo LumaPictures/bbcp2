@@ -464,7 +464,7 @@ int bbcp_File::Read_Direct(bbcp_BuffPool* iBP, bbcp_BuffPool* oBP)
 {
     bbcp_Buffer* bP;
     ssize_t rlen;
-    int Trunc = 0, rdsz = iBP->DataSize();
+    int rdsz = iBP->DataSize();
 
 // Initialize transfer rate limiting if so desired
 //
@@ -487,13 +487,14 @@ int bbcp_File::Read_Direct(bbcp_BuffPool* iBP, bbcp_BuffPool* oBP)
         //
         if (bytesLeft < rdsz)
         {
-            rdsz = bytesLeft + (blockSize - 1) & ~(blockSize - 1);
+            // TODO: check if this is the intended parentheses
+            // rdsz = bytesLeft + (blockSize - 1) & ~(blockSize - 1);
+            rdsz = bytesLeft + ((blockSize - 1) & ~(blockSize - 1));
             if ((rlen = IOB->Read(bP->data, rdsz)) < bytesLeft)
             {
                 iBP->putEmptyBuff(bP);
                 break;
             }
-            Trunc = 1;
             rlen = bytesLeft;
         }
         else

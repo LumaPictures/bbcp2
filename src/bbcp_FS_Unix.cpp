@@ -130,7 +130,7 @@ int bbcp_FS_Unix::Enough(long long bytes, int numfiles)
     if (!(buf.f_files | buf.f_ffree | buf.f_favail))
         numfiles = 0;
 #endif
-    return (free_space > bytes) && buf.f_favail > numfiles;
+    return (free_space > bytes) && buf.f_favail > static_cast<unsigned int>(numfiles);
 #else
     return 1;
 #endif

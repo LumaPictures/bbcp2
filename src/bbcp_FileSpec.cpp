@@ -356,7 +356,7 @@ int bbcp_FileSpec::Encode(char* buff, size_t blen)
     char grpBuff[64], * Space, * theGrp, Otype = Info.Otype;
     long long theSize;
     bool isSL = Info.SLink != 0;
-    int n;
+    size_t n = 0;
 
 // We have postponed handling spaces in file names until encode time. If there
 // spaces, we need to substitute them with a space char and tell the receiver
@@ -439,7 +439,6 @@ bool bbcp_FileSpec::ExtendFileSpec(int& numF, int& numL, int slOpt)
     bbcp_FileSpec* newp;
     DIR* dirp;
     char relative_name[1024], absolute_name[4096];
-    struct stat sbuf;
     int accD = (bbcp_Config.Options & bbcp_RXONLY ? R_OK | X_OK : 0);
     int accF = (bbcp_Config.Options & bbcp_RDONLY ? R_OK : 0);
     int dirFD;
@@ -607,7 +606,6 @@ int bbcp_FileSpec::Finalize(int retc)
 void bbcp_FileSpec::Parse(char* spec, int isPipe)
 {
     char* sp, * cp;
-    int i;
 
 // Create a copy of the spec
 //
@@ -724,7 +722,7 @@ int bbcp_FileSpec::setMode(mode_t Mode)
 int bbcp_FileSpec::setStat(mode_t Mode)
 {
     char* act = 0;
-    int retc, ecode = 0;
+    int retc = 0;
 
 // Make sure we have a filesystem here
 //
@@ -736,7 +734,6 @@ int bbcp_FileSpec::setStat(mode_t Mode)
     if ((retc = FSp->setTimes(targpath, Info.atime, Info.mtime)))
     {
         act = (char*)"setting time on";
-        ecode = retc;
     }
 
 // Set the mode (mode depends on whether this is a plain preserve or not)
@@ -746,7 +743,6 @@ int bbcp_FileSpec::setStat(mode_t Mode)
     if ((retc = FSp->setMode(targpath, Mode)))
     {
         act = (char*)"setting mode on";
-        ecode = retc;
     }
 
 // Set the group only if this is a plain preserve
@@ -1011,7 +1007,7 @@ void bbcp_FileSpec::BuildPaths()
 int bbcp_FileSpec::Xfr_Fixup()
 {
     char* lp;
-    int infd, retc;
+    int infd;
     bbcp_Stream TSigstream;
     bbcp_FileSpec TSpec;
 

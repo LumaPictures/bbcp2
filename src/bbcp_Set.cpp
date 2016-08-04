@@ -59,7 +59,7 @@ bbcp_Set::~bbcp_Set()
 {
     SetItem* sP, * dP;
 
-    for (int i = 0; i < Slots; i++)
+    for (unsigned int i = 0; i < Slots; i++)
     {
         if ((sP = SetTab[i]))
             do

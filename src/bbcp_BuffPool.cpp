@@ -80,7 +80,6 @@ bbcp_BuffPool::bbcp_BuffPool(const char* id) : EmptyBuffs(0), FullBuffs(0)
 bbcp_BuffPool::~bbcp_BuffPool()
 {
     bbcp_Buffer* currp;
-    int i = 16, j = 1;
 
 // Free all of the buffers in the empty queue
 //
@@ -342,6 +341,7 @@ void bbcp_BuffPool::putFullBuff(bbcp_Buffer* buffp)
 /******************************************************************************/
 
 #define USBUFF int  USbuffL, USbuff[2]; unsigned short USbuffS; char *UScp
+#define USNOBUFF int  USbuffL, USbuff[2]; char *UScp
 
 /******************************************************************************/
 
@@ -376,7 +376,7 @@ void bbcp_BuffPool::putFullBuff(bbcp_Buffer* buffp)
 
 int bbcp_BuffPool::Decode(bbcp_Buffer* bp)
 {
-    USBUFF;
+    USNOBUFF;
     bbcp_Header* hp = &bp->bHdr;
     bbcp_Headcs* cP = (bbcp_Headcs*)hp, csData;
     char hdcs = 0;
@@ -416,7 +416,7 @@ int bbcp_BuffPool::Decode(bbcp_Buffer* bp)
 
 void bbcp_BuffPool::Encode(bbcp_Buffer* bp, char xcmnd)
 {
-    USBUFF;
+    USNOBUFF;
     bbcp_Header* hp = &bp->bHdr;
     bbcp_Headcs* cP = (bbcp_Headcs*)hp, csData;
     char hdcs = 0;

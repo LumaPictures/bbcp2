@@ -162,7 +162,7 @@ char* bbcp_Args::getarg(int newln)
 
 char bbcp_Args::getopt()
 {
-    char optval, optbuff[2] = {0, 0}, * optspec, * arglist, * theOpt = optbuff;
+    char optbuff[2] = {0, 0}, * optspec, * arglist, * theOpt = optbuff;
 
 // Check if we really have any more options
 //

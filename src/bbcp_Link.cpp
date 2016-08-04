@@ -317,7 +317,6 @@ int bbcp_Link::Net2Buff()
 
 int bbcp_Link::Control_In(bbcp_Buffer* bp)
 {
-    int newsz;
     bbcp_Header* hp = &bp->bHdr;
 
 // Check if this is a vanilla close request.

@@ -90,7 +90,7 @@ public:
     void Update(const char* Buff, int BLen)
     {
         unsigned char* buff = (unsigned char*)Buff;
-        while (BLen >= AdlerNMax)
+        while (static_cast<unsigned int>(BLen) >= AdlerNMax)
         {
             BLen -= AdlerNMax;
             n = AdlerNCnt;

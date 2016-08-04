@@ -203,7 +203,7 @@ int bbcp_Protocol::setCBPort(int pnum)
 void bbcp_Protocol::getEnd(bbcp_Node* Node)
 {
     char* wp, csVal[64];
-    int n;
+    unsigned int n = 0;
 
 // Preset values
 //
@@ -1115,7 +1115,7 @@ void bbcp_Protocol::putCSV(char* Host, char* csFn, char* csVal, int csVsz)
     struct iovec iov[] = {{(char*)"Checksum: ", 10},
                           {bbcp_Config.csName,  strlen(bbcp_Config.csName)},
                           {(char*)" ",          1},
-                          {csVal,               csVsz},
+                          {csVal,               static_cast<size_t>(csVsz)},
                           {(char*)" ",          1},
                           {Host,                strlen(Host)},
                           {(char*)":",          1},

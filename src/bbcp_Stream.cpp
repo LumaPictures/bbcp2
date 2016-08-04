@@ -120,8 +120,6 @@ int bbcp_Stream::Attach(int FileDescriptor, int bsz)
 
 void bbcp_Stream::Close()
 {
-    int retc = 0;
-
     // Wait for any associated process on this stream
     //
     Drain();

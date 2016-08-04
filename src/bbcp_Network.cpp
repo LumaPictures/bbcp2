@@ -246,7 +246,7 @@ int bbcp_Network::Bind(int minport, int maxport, int tries, int timeout)
     bbcp_NetAddr InetAddr;
     const char* eText;
     char* action;
-    int retc, One = 1, btry = 1;
+    int retc, btry = 1;
     unsigned short port = minport;
 
 // Close any open socket here
@@ -459,7 +459,7 @@ int bbcp_Network::MaxWSize(int isSink)
     socklen_t szcur = (socklen_t)sizeof(cursz);
     socklen_t szseg = (socklen_t)sizeof(maxSegment);
     socklen_t sznow;
-    int rcs, rcg;
+    int rcs;
 
 // Define a socket for discovering the maximum window size
 //

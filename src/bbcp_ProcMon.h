@@ -46,8 +46,8 @@ public:
 
     void Stop();
 
-    bbcp_ProcMon() : pingNode(0), MonPool(0), mytid(0),
-                     alldone(0), TimeLimit(0), monDone(0)
+    bbcp_ProcMon() : monDone(0), MonPool(0), pingNode(0),
+                     mytid(0), alldone(0), TimeLimit(0)
     {
     }
 
@@ -56,18 +56,20 @@ public:
         Stop();
     }
 
-    bbcp_BuffPool* MonPool;
-
 private:
-
-    pthread_t mytid;
-    int alldone;
-    int TimeLimit;
-    pid_t monPID;
     bbcp_CondVar CondMon;
     bbcp_Semaphore monDone;
     bbcp_Mutex pingMutex;
+
+public:
+    bbcp_BuffPool* MonPool;
+
+private:
     bbcp_Node* pingNode;
+    pthread_t mytid;
+    pid_t monPID;
+    int alldone;
+    int TimeLimit;
 };
 
 #endif

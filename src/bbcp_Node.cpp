@@ -390,7 +390,7 @@ int bbcp_Node::RecvFile(bbcp_FileSpec* fp, bbcp_Node* Remote)
 
     const char* Args = 0, * Act = "opening", * Path = fp->targpath;
     long tretc = 0;
-    int i, oflag, retc, Mode = wOnly, progtid = 0;
+    int i, oflag, retc, Mode = wOnly;
     long long startoff = 0;
     pid_t Child[2] = {0, 0};
     bbcp_File* outFile, * seqFile = 0;
@@ -398,7 +398,6 @@ int bbcp_Node::RecvFile(bbcp_FileSpec* fp, bbcp_Node* Remote)
     pthread_t tid, link_tid[BBCP_MAXSTREAMS + 4];
     bbcp_Timer Elapsed_Timer;
     bbcp_ProgMon* pmp = 0;
-    float CRatio;
 
 // Perform Force or Append processing
 //

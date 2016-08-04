@@ -73,7 +73,7 @@ char* bbcp_ChkSum::x2a(char* inCS)
 
 // Truncate the checksum if need be
 //
-    if (csLen * 2 >= sizeof(csBuff))
+    if (static_cast<size_t>(csLen) * 2 >= sizeof(csBuff))
         csLen = sizeof(csBuff) * 2 - 1;
 
 // Convert checksum to text

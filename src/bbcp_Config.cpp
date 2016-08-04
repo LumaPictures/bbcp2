@@ -1597,7 +1597,8 @@ char* bbcp_Config::n2a(long long val, char* buff, const char* fmt)
 
 void bbcp_Config::ParseSB(char* spec)
 {
-    char* up = 0, * hp = 0, * cp, * sp;
+    char* cp = 0;
+    char* sp = 0;
     int i = strlen(spec);
 
 // Make sure spec ends with a slash
