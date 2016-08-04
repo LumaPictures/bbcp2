@@ -356,7 +356,7 @@ int bbcp_FileSpec::Encode(char* buff, size_t blen)
     char grpBuff[64], * Space, * theGrp, Otype = Info.Otype;
     long long theSize;
     bool isSL = Info.SLink != 0;
-    size_t n = 0;
+    int n = 0;
 
 // We have postponed handling spaces in file names until encode time. If there
 // spaces, we need to substitute them with a space char and tell the receiver
@@ -423,7 +423,7 @@ int bbcp_FileSpec::Encode(char* buff, size_t blen)
 //
     if (n < 0)
         return bbcp_Fmsg("Encode", "stat format error.");
-    if (n >= blen)
+    if (static_cast<size_t>(n) >= blen)
         return bbcp_Fmsg("Encode", "buffer overflow.");
     return n;
 }
