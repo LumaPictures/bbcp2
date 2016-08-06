@@ -12,7 +12,6 @@ if (APPLE)
     add_compile_options(-DMACOS)
     # right now we are using brew built libs, but adding a proper find module later on
     include_directories(/usr/local/opt/openssl/include)
-    link_directories(/usr/local/opt/openssl/lib)
 elseif (UNIX) # linux, non apple unix
     add_compile_options(-Dunix -D_BSD  -DLINUX -Wall)
 elseif (MSVC)
