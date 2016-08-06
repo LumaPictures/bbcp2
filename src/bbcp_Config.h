@@ -166,8 +166,6 @@ public:
     ~bbcp_Config();
 
 private:
-    char* OPp;
-
     void Cleanup(int rc, char* cfgfn, int cfgfd);
 
     void Config_Ctl(int);
