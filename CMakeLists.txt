@@ -6,14 +6,14 @@ set(EXEC_NAME bbcp2)
 
 file(GLOB SRC src/*.cpp)
 
-add_compile_options(-D_ALL_SOURCE -D_REENTRANT -DOO_STD -Wall) #-Wextra -Werror
+add_compile_options(-D_ALL_SOURCE -D_REENTRANT -DOO_STD -Wall -Werror) #-Wextra -Werror
 
 if (APPLE)
     add_compile_options(-DMACOS)
     # right now we are using brew built libs, but adding a proper find module later on
     include_directories(/usr/local/opt/openssl/include)
 elseif (UNIX) # linux, non apple unix
-    add_compile_options(-Dunix -D_BSD  -DLINUX -Wall)
+    add_compile_options(-Dunix -D_BSD -DLINUX)
 elseif (MSVC)
 endif ()
 

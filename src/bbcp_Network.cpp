@@ -72,8 +72,6 @@ bbcp_Network::bbcp_Network()
 {
     static const int BBCP_IPPROTO_TCP = 6;
     struct protoent* pp;
-    char netBuff[256];
-    int netFD;
 
 // Establish this network as having no known attributes
 //
@@ -94,6 +92,8 @@ bbcp_Network::bbcp_Network()
 
 
 #ifdef LINUX
+    char netBuff[256];
+    int netFD;
 // We are a Linux host, see if autotuning is enabled
 //
     if ((netFD = open("/proc/sys/net/ipv4/tcp_moderate_rcvbuf", O_RDONLY)) > -1)
@@ -367,6 +367,10 @@ bbcp_Link* bbcp_Network::Connect(char* host, int port, int retries, int rwait)
 /*                              f i n d P o r t                               */
 /******************************************************************************/
 
+#ifdef MACOS
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
 
 void bbcp_Network::findPort(int& minport, int& maxport)
 {
@@ -401,6 +405,10 @@ void bbcp_Network::findPort(int& minport, int& maxport)
     if (minport > maxport)
         minport = maxport = 0;
 }
+
+#ifdef MACOS
+#pragma GCC diagnostic pop
+#endif
 
 /******************************************************************************/
 /*                                  F l o w                                   */

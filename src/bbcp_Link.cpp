@@ -80,7 +80,7 @@ int bbcp_Link::Buff2Net()
     ssize_t wrsz, wlen = 0;
     const ssize_t hdrsz = (ssize_t)sizeof(bbcp_Header);
     int retc = 0, NotDone = 1, csLen = (csObj ? csObj->csSize() : 0);
-    struct iovec iov[2] = {0, hdrsz, 0, 0};
+    struct iovec iov[2] = {{0, hdrsz}, {0, 0}};
 
 // Establish logging options
 //

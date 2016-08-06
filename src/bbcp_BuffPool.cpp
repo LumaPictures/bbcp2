@@ -194,7 +194,6 @@ int bbcp_BuffPool::Allocate(int buffnum, int bsize, int Sink, int ovhd)
 
 int bbcp_BuffPool::Allocate(int buffnum)
 {
-    static int PageSize = sysconf(_SC_PAGESIZE);
     bbcp_Buffer* new_empty;
     int bnum = buffnum;
     char* baddr;
