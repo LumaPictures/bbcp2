@@ -6,7 +6,7 @@ set(EXEC_NAME bbcp2)
 
 file(GLOB SRC src/*.cpp)
 
-add_compile_options(-D_ALL_SOURCE -D_REENTRANT -DOO_STD -Wall -Werror) #-Wextra -Werror
+add_compile_options(-D_ALL_SOURCE -D_REENTRANT -DOO_STD -Wall -Werror -std=c++11) #-Wextra -Werror
 
 if (APPLE)
     add_compile_options(-DMACOS)

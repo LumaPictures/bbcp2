@@ -51,6 +51,7 @@
 #include "bbcp_Pthread.h"
 #include "bbcp_System.h"
 #include "bbcp_Debug.h"
+#include "bbcp_Emsg.h"
 
 /******************************************************************************/
 /*                         L o c a l   D e f i n e s                          */
@@ -271,23 +272,28 @@ int bbcp_FS_Unix::RM(const char* path)
 }
 
 /******************************************************************************/
-/*                              s e t G r o u p                               */
+/*                              s e t G r o u p and User                      */
 /******************************************************************************/
 
-int bbcp_FS_Unix::setGroup(const char* path, const char* Group)
+int bbcp_FS_Unix::setGroupAndUser(const char* path, const char* Group, const char* User)
 {
     gid_t gid;
 
 // Convert the group name to a gid
 //
-    if (!Group || !Group[0])
+    if (Group == nullptr || !Group[0])
         return 0;
     gid = bbcp_OS.getGID(Group);
+    uid_t uid = bbcp_OS.getUID(User);
 
 // Set the group code and return
 //
-    if (chown(path, (uid_t)-1, gid))
-        return -errno;
+    if (chown(path, uid, gid))
+    {
+        bbcp_Fmsg("setGroupAndUser", "Can't setup the uid and gid at once, trying without uid, try root access!");
+        if (chown(path, (uid_t)-1, gid))
+            return -errno;
+    }
     return 0;
 }
 
@@ -417,6 +423,10 @@ int bbcp_FS_Unix::Stat(struct stat& xbuff, bbcp_FileInfo* sbuff)
     if (sbuff->Group)
         free(sbuff->Group);
     sbuff->Group = bbcp_OS.getGNM(xbuff.st_gid);
+
+    if (sbuff->User)
+        free(sbuff->User);
+    sbuff->User = bbcp_OS.getUNM(xbuff.st_uid);
 
 // All done
 //

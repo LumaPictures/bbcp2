@@ -53,7 +53,7 @@ public:
 
     int RM(const char* path);
 
-    int setGroup(const char* path, const char* Group);
+    int setGroupAndUser(const char* path, const char* Group, const char* User);
 
     int setMode(const char* path, mode_t mode);
 

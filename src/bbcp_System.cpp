@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <grp.h>
+
 #include <limits.h>
 #include <pwd.h>
 #include <signal.h>
@@ -115,6 +116,23 @@ gid_t bbcp_System::getGID(const char* group)
     return gid;
 }
 
+uid_t bbcp_System::getUID(const char* user)
+{
+    uid_t uid = (uid_t)-1;
+    if (user == nullptr)
+        return uid;
+
+    Plookup.Lock();
+
+    passwd* pass = getpwnam(user);
+
+    if (pass != nullptr)
+        uid = pass->pw_uid;
+
+    Plookup.UnLock();
+    return uid;
+}
+
 /******************************************************************************/
 /*                                g e t G N M                                 */
 /******************************************************************************/
@@ -136,6 +154,16 @@ char* bbcp_System::getGNM(gid_t gid)
 // Return a copy of the group name
 //
     return strdup(gnmp);
+}
+
+char* bbcp_System::getUNM(uid_t uid)
+{
+    Plookup.Lock();
+    passwd* pass = getpwuid(uid);
+    Plookup.UnLock();
+    if (pass == 0)
+        return strdup("nouser");
+    return strdup(pass->pw_name);
 }
 
 /******************************************************************************/

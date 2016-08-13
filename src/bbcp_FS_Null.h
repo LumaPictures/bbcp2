@@ -62,7 +62,7 @@ public:
         return 0;
     }
 
-    int setGroup(const char* path, const char* Group)
+    int setGroupAndUser(const char* path, const char* Group, const char* User)
     {
         return 0;
     }
