@@ -148,10 +148,10 @@ bbcp_Config::bbcp_Config()
     RWBsz = 0;
 // SrcXeq    = strdup("ssh -x -a -oFallBackToRsh=no -oServerAliveInterval=10 "
     SrcXeq = strdup("ssh -x -a -oFallBackToRsh=no "
-                        "%4 %I -l %U %H bbcp");
+                        "%4 %I -l %U %H bbcp2");
 // SnkXeq    = strdup("ssh -x -a -oFallBackToRsh=no -oServerAliveInterval=10 "
     SnkXeq = strdup("ssh -x -a -oFallBackToRsh=no "
-                        "%4 %I -l %U %H bbcp");
+                        "%4 %I -l %U %H bbcp2");
     Logurl = 0;
     Logfn = 0;
     MLog = 0;
