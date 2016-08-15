@@ -65,8 +65,8 @@ int bbcp_Fmsg(const char* sfx, const char* txt1, const char* txt2,
     int i;
 
     bP = buff + (sfx && bbcp_Debug.Trace
-                 ? sprintf(buff, "bbcp_%s.%s: %s", bbcp_Debug.Who, sfx, txt1)
-                 : sprintf(buff, "bbcp: %s", txt1));
+                 ? sprintf(buff, "bbcp2_%s.%s: %s", bbcp_Debug.Who, sfx, txt1)
+                 : sprintf(buff, "bbcp2: %s", txt1));
 
     for (i = 0; i < 5 && bV[i]; i++)
         bP += sprintf(bP, " %s", bV[i]);
