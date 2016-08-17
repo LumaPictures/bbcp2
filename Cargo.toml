@@ -1,0 +1,6 @@
+[package]
+name = "bbcp2"
+version = "0.1.0"
+authors = ["palm <palm@luma-pictures.com>"]
+
+[dependencies]

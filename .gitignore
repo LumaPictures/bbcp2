@@ -1,4 +1,6 @@
 *.o
 bin/
 obj/
-.idea/*
+.idea/*target
+Cargo.lock
+target
