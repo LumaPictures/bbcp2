@@ -1,59 +1,40 @@
-# package information
-#
-# Building:
-#    rpmbuild -ba --clean --define "commit  3c0b6c49" bbcp.spec
-#
+Name:        bbcp2
+Version:     1.0
+Release:     2
+Vendor:      Pal Mezei
+License:     GNU LGPL v3
+Group:       External packages
+URL:         https://github.com/sirpalee/bbcp2
+Packager:    Rares Hornet
+Source:      %{name}-%{version}.tar.gz
+BuildRoot:   %{_tmppath}/%{pkg}-%{version}
+Prefix:      /usr
+Summary:     Securely and quickly copy data from source to target.
+
+%description
+bbcp2 is a point-to-point network file copy application written by Andy Hanushevsky at SLAC and improved by Pal Mezei
+It is capable of transferring files at approaching line speeds in the WAN.
 
 %define instdir  /usr
 
-Name:        bbcp
-Version:     14.9.2
-Release:     1%{?dist}
-
-Vendor:      SLAC
-License:     GNU LGPL v3
-Group:       External packages
-URL:         http://www.slac.stanford.edu/~abh/bbcp/
-Packager:    Wilko Kroeger <wilko@slac.stanford.edu>
-Source:      %{name}-%{version}-%{commit}.tar.gz
-BuildRoot:   %{_tmppath}/%{pkg}-%{version}
-Prefix:      /usr
-Autoreq:     0 
-AutoReqProv: 0
-
-Summary:     Securely and quickly copy data from source to target.  
-
-%description
-bbcp is a point-to-point network file copy application written by Andy Hanushevsky at SLAC. 
-It is capable of transferring files at approaching line speeds in the WAN.
-
-
-# =============== Scripts =====================
-
 %prep
-%setup -n %{name}-%{version}-%{commit} -q
+%setup -n %{name}-%{version} -q
 
 %build
-cd src
-DEST_SYSNAME=linux  make
-
+cmake -DCMAKE_RELEASE_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{buildroot}
+make
 
 %install
-install -d %{buildroot}%{instdir}/bin
-cp bin/linux/bbcp %{buildroot}%{instdir}/bin/
-
+install -d %{buildroot}/%{instdir}/bin
+cp bbcp2 %{buildroot}/%{instdir}/bin
 
 %clean
 rm -rf %{buildroot}
 
-
 %files
-%{instdir}/bin
-
-# ================= ChangeLog =========================
+%{instdir}/bin/*
 
 %changelog
 
-* Wed Nov 5 2014 Wilko Kroeger  <wilko@slac.stanford.edu> 14.9.2-1
-- bbcp from commit 3c0b6c49.
-
+* Wed Aug 13 2016 Pal Mezei
+- cleaned up code and added user ownership (as root/sudo only) feature into preserve flag
