@@ -971,7 +971,8 @@ int bbcp_FileSpec::Xfr_Done()
 void bbcp_FileSpec::BuildPaths()
 {
     char delim, * cp = filename, * Slush;
-    int plen, same = 0, pfxlen = filename - pathname;
+    int plen, pfxlen = filename - pathname;
+    bool same = false;
     bbcp_FileSpec* PS_New, * PS_Prv = 0, * PS_Cur = bbcp_Config.srcPath;
 
 // Make sure we have at least one slash here
@@ -991,7 +992,7 @@ void bbcp_FileSpec::BuildPaths()
         while (PS_Cur && plen >= PS_Cur->seqno)
         {
             if (plen == PS_Cur->seqno
-                && (same = !strcmp(filename, PS_Cur->filename)))
+                && (same = (strcmp(filename, PS_Cur->filename) != 0)))
                 break;
             PS_Prv = PS_Cur;
             PS_Cur = PS_Cur->next;
