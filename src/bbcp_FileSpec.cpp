@@ -972,7 +972,6 @@ void bbcp_FileSpec::BuildPaths()
 {
     char delim, * cp = filename, * Slush;
     int plen, pfxlen = filename - pathname;
-    bool found = false;
     bbcp_FileSpec* PS_New, * PS_Prv = 0, * PS_Cur = bbcp_Config.srcPath;
 
 // Make sure we have at least one slash here
@@ -989,6 +988,7 @@ void bbcp_FileSpec::BuildPaths()
         delim = *cp;
         *cp = '\0';
         plen = cp - filename;
+        bool found = false;
         while (PS_Cur)
         {
             found = strcmp(filename, PS_Cur->filename) == 0;
