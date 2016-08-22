@@ -162,7 +162,7 @@ bbcp_Link* bbcp_Network::Accept()
     bbcp_NetSockAddr PeerAddr;
     const char* newfn, * eText;
     int newfd, retc;
-    bbcp_Link* newconn;
+    bbcp_Link* newconn = 0;
     struct pollfd sfd[1];
     socklen_t addrLen = sizeof(PeerAddr);
 

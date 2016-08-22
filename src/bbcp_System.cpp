@@ -200,7 +200,7 @@ pid_t bbcp_System::getGrandP()
 {
     char cmd[256], * lp;
     bbcp_Stream cmdstream;
-    int rc, grandpa;
+    int rc, grandpa = 0;
 
     sprintf(cmd, PS_CMD, getppid());
     if ((rc = cmdstream.Exec(cmd)))
@@ -317,7 +317,7 @@ int bbcp_System::Waitpid(pid_t thePid)
 int bbcp_System::Waitpid(pid_t* pvec, int* ent, int nomsg)
 {
     pid_t Pdone;
-    int i, retc = 0, sval;
+    int i, retc = 0, sval = 0;
 #ifdef AIX
     union wait estat;
 #else

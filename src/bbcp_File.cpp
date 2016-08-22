@@ -463,7 +463,7 @@ int bbcp_File::Read_All(bbcp_BuffPool& inPool, int Vn)
 int bbcp_File::Read_Direct(bbcp_BuffPool* iBP, bbcp_BuffPool* oBP)
 {
     bbcp_Buffer* bP;
-    ssize_t rlen;
+    ssize_t rlen = 0;
     int rdsz = iBP->DataSize();
 
 // Initialize transfer rate limiting if so desired

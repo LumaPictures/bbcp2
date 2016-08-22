@@ -971,8 +971,7 @@ int bbcp_FileSpec::Xfr_Done()
 void bbcp_FileSpec::BuildPaths()
 {
     char delim, * cp = filename, * Slush;
-    int plen, pfxlen = filename - pathname;
-    bbcp_FileSpec* PS_New, * PS_Prv = 0, * PS_Cur = bbcp_Config.srcPath;
+    const unsigned int pfxlen = filename - pathname;
 
 // Make sure we have at least one slash here
 //
@@ -987,39 +986,34 @@ void bbcp_FileSpec::BuildPaths()
             cp++;
         delim = *cp;
         *cp = '\0';
-        plen = cp - filename;
+        const unsigned int plen = cp - filename;
         bool found = false;
-        while (PS_Cur)
+        bbcp_FileSpec* PS_last = 0;
+        for (bbcp_FileSpec* PS_curr = bbcp_Config.srcPath; PS_curr != nullptr; PS_curr = PS_curr->next)
         {
-            found = strcmp(filename, PS_Cur->filename) == 0;
-            if (found)
+            PS_last = PS_curr;
+            if ((found = strcmp(filename, PS_curr->filename) == 0))
                 break;
-            PS_Prv = PS_Cur;
-            PS_Cur = PS_Cur->next;
         }
         if (!found)
         {
-            PS_New = new bbcp_FileSpec();
-            PS_New->fspec = PS_New->pathname = strdup(pathname);
-            PS_New->filename = PS_New->filereqn = PS_New->fspec + pfxlen;
-            PS_New->seqno = plen;
-            if (PS_New->Stat(0))
+            bbcp_FileSpec* PS_new = new bbcp_FileSpec();
+            PS_new->fspec = PS_new->pathname = strdup(pathname);
+            PS_new->filename = PS_new->filereqn = PS_new->fspec + pfxlen;
+            PS_new->seqno = plen;
+            if (PS_new->Stat(0))
             {
                 DEBUG("Path " << pathname << " not found.");
-                delete PS_New;
+                delete PS_new;
                 return;
             }
-            if (PS_Cur)
+            if (PS_last)
             {
-                PS_New->next = PS_Cur->next;
-                PS_Cur->next = PS_New;
+                PS_new->next = PS_last->next;
+                PS_last->next = PS_new;
             }
-            else if (PS_Prv)
-                PS_Prv->next = PS_New;
             else
-                bbcp_Config.srcPath = PS_New;
-            PS_Prv = PS_New;
-            PS_Cur = PS_New->next;
+                bbcp_Config.srcPath = PS_new;
         }
         if ((*cp = delim))
             cp++;

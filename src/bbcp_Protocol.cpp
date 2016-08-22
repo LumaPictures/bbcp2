@@ -256,7 +256,7 @@ int bbcp_Protocol::Process(bbcp_Node* Node)
     bbcp_FileSpec* fp = bbcp_Config.srcSpec;
     pthread_t Tid;
     int rc, NoGo = 0;
-    char* cp;
+    char* cp = 0;
 
 // If there is a r/t lock file, make sure it exists
 //
@@ -807,7 +807,7 @@ int bbcp_Protocol::Request_exit(int retc, const char* dRM)
 
 int bbcp_Protocol::Request_flist(long long& totsz, int& numlinks, bool dotrim)
 {
-    int retc, noteol, numfiles = 0;
+    int retc, noteol = 0, numfiles = 0;
     char* lp, * tfn;;
     int tdln = strlen(tdir);
     bbcp_FileSpec* fp, * lastfp = 0, * lastdp = 0, * lastsp = 0;
