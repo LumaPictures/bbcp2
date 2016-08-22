@@ -21,7 +21,7 @@ It is capable of transferring files at approaching line speeds in the WAN.
 %setup -n %{name}-%{version} -q
 
 %build
-cmake -DCMAKE_RELEASE_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{buildroot}
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{buildroot}
 make
 
 %install
