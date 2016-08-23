@@ -156,14 +156,14 @@ char* bbcp_System::getGNM(gid_t gid)
     return strdup(gnmp);
 }
 
-char* bbcp_System::getUNM(uid_t uid)
+std::string bbcp_System::getUNM(uid_t uid)
 {
     Plookup.Lock();
     passwd* pass = getpwuid(uid);
     Plookup.UnLock();
-    if (pass == 0)
-        return strdup("nouser");
-    return strdup(pass->pw_name);
+    if (pass == nullptr || pass->pw_name == nullptr)
+        return "nouser";
+    return pass->pw_name;
 }
 
 /******************************************************************************/

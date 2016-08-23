@@ -424,8 +424,6 @@ int bbcp_FS_Unix::Stat(struct stat& xbuff, bbcp_FileInfo* sbuff)
         free(sbuff->Group);
     sbuff->Group = bbcp_OS.getGNM(xbuff.st_gid);
 
-    if (sbuff->User)
-        free(sbuff->User);
     sbuff->User = bbcp_OS.getUNM(xbuff.st_uid);
 
 // All done

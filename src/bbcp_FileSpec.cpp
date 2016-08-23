@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <algorithm>
 
 #include "bbcp_Config.h"
 #include "bbcp_Emsg.h"
@@ -58,14 +59,14 @@ extern bbcp_Config bbcp_Config;
 #define bbcp_DEFMT "%d %c %lld %o %lld %lx %lx %31s %31s %2054s"
 #define bbcp_DEGMT "%d %c %Ld  %o %Ld  %lx %lx %31s %31s %2054s"
 
-#define SpaceAlt 0x1a
-
 int bbcp_FileSpec::trimDir = 0;
 
 namespace {
     bbcp_Set* pathSet = 0;
 
     bbcp_FileSpec* lastp = 0;
+
+    const char SpaceAlt = 0x1a;
 };
 
 /******************************************************************************/
@@ -317,17 +318,14 @@ int bbcp_FileSpec::Decode(char* buff, char* xName)
         free(Info.Group);
     Info.Group = strdup(gnbuff);
 
-    if (Info.User)
-        free(Info.User);
-    Info.User = strdup(usbuff);
+    Info.User = usbuff;
 
 // Apply space conversion to the group and user name
 //
     while ((Space = index(Info.Group, SpaceAlt)))
         *Space++ = ' ';
 
-    while ((Space = index(Info.User, SpaceAlt)))
-        *Space++ = ' ';
+    std::replace(Info.User.begin(), Info.User.end(), SpaceAlt, ' ');
 
 // Check if we need to reconvert the file specification by replacing alternate
 // space characters with actual spaces.
@@ -395,18 +393,8 @@ int bbcp_FileSpec::Encode(char* buff, size_t blen)
         } while ((Space = index(Space + 1, ' ')));
     }
 
-    // replacing the spaces with alternate characters
-    auto replace_space = [&](const char* target) -> std::string {
-        std::string ret = target == nullptr ? "" : target;
-        for (auto s : ret)
-        {
-            if (s == ' ')
-                s = SpaceAlt;
-        }
-        return ret;
-    };
-
-    theUsr = replace_space(Info.User);
+    theUsr = Info.User;
+    std::replace(theUsr.begin(), theUsr.end(), ' ', SpaceAlt);
 
 // Convert spaces in the group name to an alternate character
 //
@@ -772,7 +760,7 @@ int bbcp_FileSpec::setStat(mode_t Mode)
 //
     if (!(bbcp_Config.Options & bbcp_PTONLY))
     {
-        FSp->setGroupAndUser(targpath, Info.Group, Info.User);
+        FSp->setGroupAndUser(targpath, Info.Group, Info.User.c_str());
     }
 
 // Check if any errors occured (we ignore these just like cp/scp does)

@@ -51,7 +51,7 @@ public:
 
 // Convert a UID to a user name and return "nouser" if failed.
 //
-    char* getUNM(uid_t uid);
+    std::string getUNM(uid_t uid);
 
 // Get the home directory
 //
