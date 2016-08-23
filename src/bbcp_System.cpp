@@ -137,33 +137,31 @@ uid_t bbcp_System::getUID(const char* user)
 /*                                g e t G N M                                 */
 /******************************************************************************/
 
-char* bbcp_System::getGNM(gid_t gid)
+std::string bbcp_System::getGNM(gid_t gid)
 {
-    char* gnmp;
-    struct group* gp;
+    std::string gnmp;
 
 // Get the group name
 //
     Glookup.Lock();
-    if ((gp = getgrgid(gid)))
+    struct group* gp = getgrgid(gid);
+    Glookup.UnLock();
+    if (gp != nullptr && gp->gr_name != nullptr)
         gnmp = gp->gr_name;
     else
-        gnmp = (char*)"nogroup";
-    Glookup.UnLock();
+        gnmp = "nogroup";
 
-// Return a copy of the group name
-//
-    return strdup(gnmp);
+    return gnmp;
 }
 
-char* bbcp_System::getUNM(uid_t uid)
+std::string bbcp_System::getUNM(uid_t uid)
 {
     Plookup.Lock();
     passwd* pass = getpwuid(uid);
     Plookup.UnLock();
-    if (pass == 0)
-        return strdup("nouser");
-    return strdup(pass->pw_name);
+    if (pass == nullptr || pass->pw_name == nullptr)
+        return "nouser";
+    return pass->pw_name;
 }
 
 /******************************************************************************/
@@ -200,7 +198,7 @@ pid_t bbcp_System::getGrandP()
 {
     char cmd[256], * lp;
     bbcp_Stream cmdstream;
-    int rc, grandpa;
+    int rc, grandpa = 0;
 
     sprintf(cmd, PS_CMD, getppid());
     if ((rc = cmdstream.Exec(cmd)))
@@ -317,7 +315,7 @@ int bbcp_System::Waitpid(pid_t thePid)
 int bbcp_System::Waitpid(pid_t* pvec, int* ent, int nomsg)
 {
     pid_t Pdone;
-    int i, retc = 0, sval;
+    int i, retc = 0, sval = 0;
 #ifdef AIX
     union wait estat;
 #else

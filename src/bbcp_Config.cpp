@@ -279,7 +279,7 @@ bbcp_Config::~bbcp_Config()
 void bbcp_Config::Arguments(int argc, char** argv, int cfgfd)
 {
     bbcp_FileSpec* lfsp;
-    int n, retc, xTrace = 1, infiles = 0, notctl = 0, rwbsz = 0;
+    int n = 0, retc, xTrace = 1, infiles = 0, notctl = 0, rwbsz = 0;
     int mspec = 0, isProg = 0;
     char* Slash, * inFN = 0, c, cbhname[MAXHOSTNAMELEN + 1];
     bbcp_Args arglist((char*)"bbcp: ");
@@ -2083,7 +2083,7 @@ void bbcp_Config::setOpts(bbcp_Args& Args)
 int bbcp_Config::setPorts(char* pspec)
 {
     char* Colon, buff[256];
-    int pnum1, pnum2;
+    int pnum1 = 0, pnum2 = 0;
 
 // Find colon and separate numbers
 //

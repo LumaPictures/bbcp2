@@ -47,11 +47,11 @@ public:
 
 // Convert a GID to a group name return "nogroup" if failed.
 //
-    char* getGNM(gid_t gid);
+    std::string getGNM(gid_t gid);
 
 // Convert a UID to a user name and return "nouser" if failed.
 //
-    char* getUNM(uid_t uid);
+    std::string getUNM(uid_t uid);
 
 // Get the home directory
 //

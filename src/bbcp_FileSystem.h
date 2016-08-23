@@ -32,6 +32,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <string>
+
 struct bbcp_FileInfo {
     long long fileid;    // Unique file identifier in the system (dev/inode)
     long long size;      // Size of file in bytes
@@ -39,22 +41,18 @@ struct bbcp_FileInfo {
     time_t atime;     // Access time
     time_t mtime;     // Modification time
     time_t ctime;     // Create time
-    char* Group;     // -> Group name
-    char* User;      // -> User name
+    std::string Group;     // -> Group name
+    std::string User; // -> User name
     char* SLink;     // -> Symlink contents
     char Otype;     // 'd' | 'f' | 'l' | 'p' | '?'
     char Xtype;     // 'x' | 0
 
-    bbcp_FileInfo() : Group(0), User(0), SLink(0), Otype('?'), Xtype(0)
+    bbcp_FileInfo() : SLink(0), Otype('?'), Xtype(0)
     {
     }
 
     ~bbcp_FileInfo()
     {
-        if (Group)
-            free(Group);
-        if (User)
-            free(User);
         if (SLink)
             free(SLink);
     }

@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <algorithm>
 
 #include "bbcp_Config.h"
 #include "bbcp_Emsg.h"
@@ -58,14 +59,14 @@ extern bbcp_Config bbcp_Config;
 #define bbcp_DEFMT "%d %c %lld %o %lld %lx %lx %31s %31s %2054s"
 #define bbcp_DEGMT "%d %c %Ld  %o %Ld  %lx %lx %31s %31s %2054s"
 
-#define SpaceAlt 0x1a
-
 int bbcp_FileSpec::trimDir = 0;
 
 namespace {
     bbcp_Set* pathSet = 0;
 
     bbcp_FileSpec* lastp = 0;
+
+    const char SpaceAlt = 0x1a;
 };
 
 /******************************************************************************/
@@ -313,21 +314,14 @@ int bbcp_FileSpec::Decode(char* buff, char* xName)
 // Set up our structure
 //
     pathname = filename = fspec = strdup(fnbuff);
-    if (Info.Group)
-        free(Info.Group);
-    Info.Group = strdup(gnbuff);
 
-    if (Info.User)
-        free(Info.User);
-    Info.User = strdup(usbuff);
+    Info.Group = gnbuff;
+    Info.User = usbuff;
 
 // Apply space conversion to the group and user name
 //
-    while ((Space = index(Info.Group, SpaceAlt)))
-        *Space++ = ' ';
-
-    while ((Space = index(Info.User, SpaceAlt)))
-        *Space++ = ' ';
+    std::replace(Info.Group.begin(), Info.Group.end(), SpaceAlt, ' ');
+    std::replace(Info.User.begin(), Info.User.end(), SpaceAlt, ' ');
 
 // Check if we need to reconvert the file specification by replacing alternate
 // space characters with actual spaces.
@@ -361,9 +355,8 @@ int bbcp_FileSpec::Encode(char* buff, size_t blen)
 {
     static const char UprCase = 0xdf;
     const char* slSep, * slXeq;
-    char grpBuff[64], * Space, Otype = Info.Otype;
-    char* theGrp;
-    std::string theUsr;
+    char * Space, Otype = Info.Otype;
+
     long long theSize;
     bool isSL = Info.SLink != 0;
     int n = 0;
@@ -395,31 +388,11 @@ int bbcp_FileSpec::Encode(char* buff, size_t blen)
         } while ((Space = index(Space + 1, ' ')));
     }
 
-    // replacing the spaces with alternate characters
-    auto replace_space = [&](const char* target) -> std::string {
-        std::string ret = target == nullptr ? "" : target;
-        for (auto s : ret)
-        {
-            if (s == ' ')
-                s = SpaceAlt;
-        }
-        return ret;
-    };
+    std::string theUsr = Info.User;
+    std::replace(theUsr.begin(), theUsr.end(), ' ', SpaceAlt);
 
-    theUsr = replace_space(Info.User);
-
-// Convert spaces in the group name to an alternate character
-//
-    if ((Space = index(Info.Group, ' ')))
-    {
-        strncpy(grpBuff, Info.Group, sizeof(grpBuff) - 1);
-        grpBuff[sizeof(grpBuff) - 1] = 0;
-        while ((Space = index(grpBuff, ' ')))
-            *Space++ = SpaceAlt;
-        theGrp = grpBuff;
-    }
-    else
-        theGrp = Info.Group;
+    std::string theGrp = Info.Group;
+    std::replace(theGrp.begin(), theGrp.end(), ' ', SpaceAlt);
 
 // Prepare for format
 //
@@ -439,7 +412,7 @@ int bbcp_FileSpec::Encode(char* buff, size_t blen)
 // Format the specification
 //
     n = snprintf(buff, blen, bbcp_ENFMT, seqno, Otype, Info.fileid,
-                 Info.mode, theSize, Info.atime, Info.mtime, theGrp, theUsr.c_str(),
+                 Info.mode, theSize, Info.atime, Info.mtime, theGrp.c_str(), theUsr.c_str(),
                  filereqn, slSep, slXeq);
 
 // Make sure all went well
@@ -500,11 +473,6 @@ bool bbcp_FileSpec::ExtendFileSpec(int& numF, int& numL, int slOpt)
         {
             free(fInfo.SLink);
             fInfo.SLink = 0;
-        }
-        if (fInfo.Group)
-        {
-            free(fInfo.Group);
-            fInfo.Group = 0;
         }
 
         // Ignore entries we can't stat for any reason
@@ -579,7 +547,8 @@ bool bbcp_FileSpec::ExtendFileSpec(int& numF, int& numL, int slOpt)
         newp->targetsz = 0;
         newp->seqno = lastp->seqno + 1;
         newp->Info = fInfo;
-        fInfo.Group = 0;
+        fInfo.Group = "";
+        fInfo.User = "";
         fInfo.SLink = 0;
         newp->FSp = FSp;
         newp->next = NULL;
@@ -772,7 +741,7 @@ int bbcp_FileSpec::setStat(mode_t Mode)
 //
     if (!(bbcp_Config.Options & bbcp_PTONLY))
     {
-        FSp->setGroupAndUser(targpath, Info.Group, Info.User);
+        FSp->setGroupAndUser(targpath, Info.Group.c_str(), Info.User.c_str());
     }
 
 // Check if any errors occured (we ignore these just like cp/scp does)
@@ -971,8 +940,7 @@ int bbcp_FileSpec::Xfr_Done()
 void bbcp_FileSpec::BuildPaths()
 {
     char delim, * cp = filename, * Slush;
-    int plen, pfxlen = filename - pathname;
-    bbcp_FileSpec* PS_New, * PS_Prv = 0, * PS_Cur = bbcp_Config.srcPath;
+    const unsigned int pfxlen = filename - pathname;
 
 // Make sure we have at least one slash here
 //
@@ -987,39 +955,34 @@ void bbcp_FileSpec::BuildPaths()
             cp++;
         delim = *cp;
         *cp = '\0';
-        plen = cp - filename;
+        const unsigned int plen = cp - filename;
         bool found = false;
-        while (PS_Cur)
+        bbcp_FileSpec* PS_last = 0;
+        for (bbcp_FileSpec* PS_curr = bbcp_Config.srcPath; PS_curr != nullptr; PS_curr = PS_curr->next)
         {
-            found = strcmp(filename, PS_Cur->filename) == 0;
-            if (found)
+            PS_last = PS_curr;
+            if ((found = strcmp(filename, PS_curr->filename) == 0))
                 break;
-            PS_Prv = PS_Cur;
-            PS_Cur = PS_Cur->next;
         }
         if (!found)
         {
-            PS_New = new bbcp_FileSpec();
-            PS_New->fspec = PS_New->pathname = strdup(pathname);
-            PS_New->filename = PS_New->filereqn = PS_New->fspec + pfxlen;
-            PS_New->seqno = plen;
-            if (PS_New->Stat(0))
+            bbcp_FileSpec* PS_new = new bbcp_FileSpec();
+            PS_new->fspec = PS_new->pathname = strdup(pathname);
+            PS_new->filename = PS_new->filereqn = PS_new->fspec + pfxlen;
+            PS_new->seqno = plen;
+            if (PS_new->Stat(0))
             {
                 DEBUG("Path " << pathname << " not found.");
-                delete PS_New;
+                delete PS_new;
                 return;
             }
-            if (PS_Cur)
+            if (PS_last)
             {
-                PS_New->next = PS_Cur->next;
-                PS_Cur->next = PS_New;
+                PS_new->next = PS_last->next;
+                PS_last->next = PS_new;
             }
-            else if (PS_Prv)
-                PS_Prv->next = PS_New;
             else
-                bbcp_Config.srcPath = PS_New;
-            PS_Prv = PS_New;
-            PS_Cur = PS_New->next;
+                bbcp_Config.srcPath = PS_new;
         }
         if ((*cp = delim))
             cp++;

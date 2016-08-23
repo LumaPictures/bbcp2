@@ -146,8 +146,7 @@ void bbcp_MD5::MD5Final(unsigned char digest[16], struct MD5Context* ctx)
     byteReverse(ctx->in, 14);
 
     /* Append length in bits and transform */
-    ((uint32*)ctx->in)[14] = ctx->bits[0];
-    ((uint32*)ctx->in)[15] = ctx->bits[1];
+    memcpy(ctx->in + 14 * sizeof(uint32), ctx->bits, 2 * sizeof(uint32));
 
     MD5Transform(ctx->buf, (uint32*)ctx->in);
     byteReverse((unsigned char*)ctx->buf, 4);
@@ -176,7 +175,7 @@ void bbcp_MD5::MD5Final(unsigned char digest[16], struct MD5Context* ctx)
  */
 void bbcp_MD5::MD5Transform(uint32 buf[4], uint32 const in[16])
 {
-    register uint32 a, b, c, d;
+    uint32 a, b, c, d;
 
     a = buf[0];
     b = buf[1];

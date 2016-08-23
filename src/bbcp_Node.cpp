@@ -636,7 +636,7 @@ int bbcp_Node::SendFile(bbcp_FileSpec* fp)
     pid_t Child[2] = {0, 0};
     bbcp_File* inFile;
     bbcp_ProcMon* TLimit = 0;
-    bbcp_ZCX* cxp;
+    bbcp_ZCX* cxp = 0;
     pthread_t tid, link_tid[BBCP_MAXSTREAMS + 1];
 
 // Set open options (check for pipes)
