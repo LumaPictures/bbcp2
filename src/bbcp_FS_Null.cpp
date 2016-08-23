@@ -137,9 +137,7 @@ int bbcp_FS_Null::Stat(const char* path, bbcp_FileInfo* sbuff)
 
 // Supply group name as "other"
 //
-    if (sbuff->Group)
-        free(sbuff->Group);
-    sbuff->Group = strdup("other");
+    sbuff->Group = "other";
 
 // All done
 //

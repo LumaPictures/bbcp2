@@ -420,8 +420,6 @@ int bbcp_FS_Unix::Stat(struct stat& xbuff, bbcp_FileInfo* sbuff)
 
 // Convert gid to a group name
 //
-    if (sbuff->Group)
-        free(sbuff->Group);
     sbuff->Group = bbcp_OS.getGNM(xbuff.st_gid);
 
     sbuff->User = bbcp_OS.getUNM(xbuff.st_uid);

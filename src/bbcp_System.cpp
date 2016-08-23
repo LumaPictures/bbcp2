@@ -137,23 +137,21 @@ uid_t bbcp_System::getUID(const char* user)
 /*                                g e t G N M                                 */
 /******************************************************************************/
 
-char* bbcp_System::getGNM(gid_t gid)
+std::string bbcp_System::getGNM(gid_t gid)
 {
-    char* gnmp;
-    struct group* gp;
+    std::string gnmp;
 
 // Get the group name
 //
     Glookup.Lock();
-    if ((gp = getgrgid(gid)))
+    struct group* gp = getgrgid(gid);
+    Glookup.UnLock();
+    if (gp != nullptr && gp->gr_name != nullptr)
         gnmp = gp->gr_name;
     else
-        gnmp = (char*)"nogroup";
-    Glookup.UnLock();
+        gnmp = "nogroup";
 
-// Return a copy of the group name
-//
-    return strdup(gnmp);
+    return gnmp;
 }
 
 std::string bbcp_System::getUNM(uid_t uid)
