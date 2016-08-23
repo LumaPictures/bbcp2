@@ -1,6 +1,6 @@
 Name:        bbcp2
 Version:     1.0
-Release:     2
+Release:     4
 Vendor:      Pal Mezei
 License:     GNU LGPL v3
 Group:       External packages
@@ -21,7 +21,7 @@ It is capable of transferring files at approaching line speeds in the WAN.
 %setup -n %{name}-%{version} -q
 
 %build
-cmake -DCMAKE_RELEASE_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{buildroot}
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{buildroot}
 make
 
 %install
@@ -35,6 +35,11 @@ rm -rf %{buildroot}
 %{instdir}/bin/*
 
 %changelog
+* Wed Aug 23 2016 Pal Mezei
+- Fixing a crash related to double freeing the char* of the fileInfo.User.
+
+* Wed Aug 13 2016 Pal Mezei
+- solved directory structure parser logic that handels the infile argument. Now bbcp is stable when reading mulpile file structures from infile and corectly syncs all data.
 
 * Wed Aug 13 2016 Pal Mezei
 - cleaned up code and added user ownership (as root/sudo only) feature into preserve flag
