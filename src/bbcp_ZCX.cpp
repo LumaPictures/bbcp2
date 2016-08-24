@@ -150,7 +150,7 @@ int bbcp_ZCX::Process()
     cbytes = Clvl ? outbytes : inbytes;
 
     Rbuff->putEmptyBuff(ibp);
-    
+
     bbcp_Buffer* obp = Obuff->getEmptyBuff();
     obp->blen = 0;
     obp->boff = outbytes;
