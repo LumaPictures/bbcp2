@@ -40,6 +40,7 @@ extern "C"
 #include <blosc.h>
 #include <cstring>
 #include <vector>
+#include <thread>
 
 /******************************************************************************/
 /*                        G l o b a l   O b j e c t s                         */
@@ -202,7 +203,7 @@ int bbcp_ZCX::Zfailure(int zerr, const char* oper, char* Zmsg)
 void bbcp_ZCX::init_compressor()
 {
     blosc_init();
-    blosc_set_nthreads(32);
+    blosc_set_nthreads(std::thread::hardware_concurrency());
     const char* compressors[] = {"blosclz", "lz4", "lz4hc", "snappy", "zlib"};
     blosc_set_compressor(compressors[4]);
 }
