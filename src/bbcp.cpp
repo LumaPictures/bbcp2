@@ -54,6 +54,7 @@
 #include "bbcp_Protocol.h"
 #include "bbcp_System.h"
 #include "bbcp_Timer.h"
+#include "bbcp_ZCX.h"
 
 /******************************************************************************/
 /*                    L O C A L   D E F I N I T I O N S                       */
@@ -96,6 +97,9 @@ int main(int argc, char* argv[], char* envp[])
 // Process the arguments
 //
     bbcp_Config.Arguments(argc, argv);
+
+    if (bbcp_Config.Options & bbcp_COMPRESS)
+        bbcp_ZCX::init_compressor();
 
 // Process final source/sink actions here
 //
@@ -171,6 +175,9 @@ int main(int argc, char* argv[], char* envp[])
 //
     delete Source;
     delete Sink;
+
+    if (bbcp_Config.Options & bbcp_COMPRESS)
+        bbcp_ZCX::destroy_compressor();
 
 // Report final statistics if wanted
 //

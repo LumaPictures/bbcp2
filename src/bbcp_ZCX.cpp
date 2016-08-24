@@ -37,6 +37,11 @@ extern "C"
 #include "bbcp_Platform.h"
 #include "bbcp_ZCX.h"
 
+#include <blosc.h>
+#include <cstring>
+#include <vector>
+#include <thread>
+
 /******************************************************************************/
 /*                        G l o b a l   O b j e c t s                         */
 /******************************************************************************/
@@ -86,111 +91,68 @@ bbcp_ZCX::bbcp_ZCX(bbcp_BuffPool* ib, bbcp_BuffPool* rb, bbcp_BuffPool* ob,
 
 int bbcp_ZCX::Process()
 {
-    z_stream ZStream;
-    uInt outsz = (uInt)Obuff->DataSize();
-    bbcp_Buffer* ibp, * obp;
-    int rc = 0, ZFlag = 0;
-    long long inbytes = 0, outbytes = 0, xfrseek = 0;
+    std::vector<char> temp_buffer(Obuff->DataSize() * 2);
 
-// Initialize the compression stream
-//
-    ZStream.zalloc = Z_NULL;
-    ZStream.zfree = Z_NULL;
-    ZStream.opaque = Z_NULL;
-    ZStream.msg = 0;
-    ZStream.data_type = Z_BINARY;
+    auto memdupvec = [](std::vector<char> in, const size_t in_size) -> char* {
+        char* ret = reinterpret_cast<char*>(malloc(in_size));
+        memcpy(ret, in.data(), in_size);
+        return ret;
+    };
 
-    if (Clvl)
-        rc = deflateInit(&ZStream, Clvl);
-    else
-        rc = inflateInit(&ZStream);
-    if (rc != Z_OK)
-        return Zfailure(rc, "initializing", ZStream.msg);
+    long long outbytes = 0;
+    long long inbytes = 0;
 
-// Get the initial inbuff and outbuff
-//
-    if (!(obp = Obuff->getEmptyBuff()))
-        return ENOBUFS;
-    ZStream.next_out = (Bytef*)obp->data;
-    ZStream.avail_out = outsz;
+    cbytes = 0;
 
-    if (!(ibp = Ibuff->getFullBuff()))
-        return ENOBUFS;
-    ZStream.next_in = (Bytef*)ibp->data;
-    if (!(ZStream.avail_in = (uInt)ibp->blen))
-        rc = Z_STREAM_END;
-    inbytes = ibp->blen;
+    bbcp_Buffer* ibp = Ibuff->getFullBuff();
 
-// Perform compression/expansion
-//
-    while (rc != Z_STREAM_END)
+    size_t number_of_fragments = 0;
+    while (ibp && ibp->blen)
     {
-        LOGSTART;
-        if (Clvl)
-            rc = deflate(&ZStream, ZFlag);
-        else
-            rc = inflate(&ZStream, ZFlag);
-        LOGEND;
-        if (rc != Z_OK && rc != Z_STREAM_END)
-            return Zfailure(rc, "performing", ZStream.msg);
+        ++number_of_fragments;
+        bbcp_Buffer* obp = Obuff->getEmptyBuff();
 
-        if (!ZStream.avail_in && !ZFlag)
-        {
-            Rbuff->putEmptyBuff(ibp);
-            if (!(ibp = Ibuff->getFullBuff()))
-                return ENOBUFS;
-            ZStream.next_in = (Bytef*)ibp->data;
-            if (!(ZStream.avail_in = (uInt)ibp->blen))
-                ZFlag = Z_FINISH;
-            else
-                inbytes += ibp->blen;
-        }
-
-        if (!ZStream.avail_out)
-        {
-            obp->blen = outsz;
-            obp->boff = outbytes;
-            outbytes += outsz;
-            Obuff->putFullBuff(obp);
-            if (!(obp = Obuff->getEmptyBuff()))
-                return ENOBUFS;
-            ZStream.next_out = (Bytef*)obp->data;
-            ZStream.avail_out = outsz;
-        }
-        cbytes = Clvl ? outbytes : inbytes - ZStream.avail_in;
-    }
-
-// If we have gotten here then all went well so far flush output
-//
-    if ((obp->blen = outsz - ZStream.avail_out))
-    {
-        obp->boff = outbytes;
-        outbytes += obp->blen;
-        Obuff->putFullBuff(obp);
-        if (!(obp = Obuff->getEmptyBuff()))
+        if (obp == nullptr)
             return ENOBUFS;
+
+        const size_t in_size = ibp->blen;
+
+        if (Clvl) // compressing
+        {
+            const int compressed_size = blosc_compress(Clvl, 0, sizeof(char), in_size, ibp->data, temp_buffer.data(), temp_buffer.size());
+            if (compressed_size < 0)
+                return Z_STREAM_ERROR;
+
+            obp->blen = compressed_size;
+            obp->data = memdupvec(temp_buffer, compressed_size);
+        }
+        else
+        {
+            const int decompressed_size = blosc_decompress(ibp->data, temp_buffer.data(), temp_buffer.size());
+            if (decompressed_size < 0)
+                return Z_STREAM_ERROR;
+
+            obp->blen = decompressed_size;
+            obp->data = memdupvec(temp_buffer, decompressed_size);
+        }
+
+        obp->boff = outbytes;
+
+        inbytes += ibp->blen;
+        outbytes += obp->blen;
+
+        cbytes = Clvl ? outbytes : inbytes;
+
+        Obuff->putFullBuff(obp);
+        Rbuff->putEmptyBuff(ibp);
+        ibp = Ibuff->getFullBuff();
     }
 
-// Complete compression/expansion processing
-//
-    if (Clvl)
-    {
-        if ((rc = deflateEnd(&ZStream)) != Z_OK)
-            return Zfailure(rc, "ending", ZStream.msg);
-    }
-    else
-    {
-        if ((rc = inflateEnd(&ZStream)) != Z_OK)
-            return Zfailure(rc, "ending", ZStream.msg);
-    }
-
-// Record the total number of compressed bytes we've processed
-//
     cbytes = Clvl ? outbytes : inbytes;
 
-// Free up buffers
-//
     Rbuff->putEmptyBuff(ibp);
+
+    bbcp_Buffer* obp = Obuff->getEmptyBuff();
     obp->blen = 0;
     obp->boff = outbytes;
     Obuff->putFullBuff(obp);
@@ -236,4 +198,17 @@ int bbcp_ZCX::Zfailure(int zerr, const char* oper, char* Zmsg)
     if (Zmsg)
         return bbcp_Fmsg("Zlib", Zmsg, oper, txt2);
     return bbcp_Emsg("Zlib", zerr, oper, txt2, (Zmsg ? Zmsg : ""));
+}
+
+void bbcp_ZCX::init_compressor()
+{
+    blosc_init();
+    blosc_set_nthreads(std::thread::hardware_concurrency());
+    const char* compressors[] = {"blosclz", "lz4", "lz4hc", "snappy", "zlib"};
+    blosc_set_compressor(compressors[4]);
+}
+
+void bbcp_ZCX::destroy_compressor()
+{
+    blosc_destroy();
 }
