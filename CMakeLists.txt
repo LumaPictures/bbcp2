@@ -14,7 +14,6 @@ if (APPLE)
     include_directories(/usr/local/opt/openssl/include)
 elseif (UNIX) # linux, non apple unix
     add_compile_options(-Dunix -D_BSD -DLINUX)
-elseif (MSVC)
 endif ()
 
 add_executable(${EXEC_NAME} ${SRC})
@@ -22,8 +21,9 @@ add_executable(${EXEC_NAME} ${SRC})
 if (APPLE)
     target_link_libraries(${EXEC_NAME} pthread z crypto)
 elseif (UNIX)
-    target_link_libraries(${EXEC_NAME} nsl pthread rt z crypto)
-elseif (MSVC)
+    include_directories(/luma/soft/rez/packages/c_blosc/1.9.3/platform-linux/gcc-4.8.3/include)
+    set(blosc_static /luma/soft/rez/packages/c_blosc/1.9.3/platform-linux/gcc-4.8.3/lib/libblosc.a)
+    target_link_libraries(${EXEC_NAME} nsl pthread rt z crypto ${blosc_static})
 endif ()
 
 install(TARGETS ${EXEC_NAME}

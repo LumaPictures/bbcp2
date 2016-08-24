@@ -50,6 +50,9 @@ public:
     {
     }
 
+    static void init_compressor();
+
+    static void destroy_compressor();
 private:
 
     int Zfailure(int zerr, const char* oper, char* Zmsg);
