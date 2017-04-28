@@ -45,7 +45,7 @@ public:
         return ATune;
     }
 
-    int Bind(int minport, int maxport, int tries = 1, int timeout = -1);
+    int Bind(int minport, int maxport, int tries = 1, int timeout = -1, int listenRetries = 8);
 
     bbcp_Link* Connect(char* host, int port, int retries = 0, int rwait = 1);
 

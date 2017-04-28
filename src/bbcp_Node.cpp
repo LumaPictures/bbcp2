@@ -816,9 +816,9 @@ int bbcp_Node::Incomming(bbcp_Protocol* protocol)
 // Set up the default ports first if we didn't find specified ones
 //
     if (minport || maxport
-        || ((retc = bbcp_Net.Bind(BBCP_DFLTMINPORT, BBCP_DFLTMAXPORT, 1, -1)) < 0)) if (
+        || ((retc = bbcp_Net.Bind(BBCP_DFLTMINPORT, BBCP_DFLTMAXPORT, 1, -1, bbcp_Config.ListenRetries)) < 0)) if (
         (retc = bbcp_Net.Bind(minport, maxport,
-                              bbcp_Config.bindtries, bbcp_Config.bindwait)) < 0)
+                              bbcp_Config.bindtries, bbcp_Config.bindwait, bbcp_Config.ListenRetries)) < 0)
         return retc;
 
 // Report the port number we have chosen

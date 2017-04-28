@@ -187,6 +187,7 @@ bbcp_Config::bbcp_Config()
     upSpec[0] = ' ';
     upSpec[1] = ' ';
     upSpec[2] = 0;
+    ListenRetries = 8;
 }
 
 /******************************************************************************/
@@ -268,7 +269,7 @@ bbcp_Config::~bbcp_Config()
 #define Cat_Oct(x) {            cbp=n2a(x,&cbp[0],"%o");}
 #define Add_Str(x) {cbp[0]=' '; strcpy(&cbp[1], x); cbp+=strlen(x)+1;}
 
-#define bbcp_VALIDOPTS (char *)"-a.AB:b:C:c.d:DeE:fFghi:I:kKl:L:m:nN:oOpP:q:rR.s:S:t:T:u:U:vVw:W:x:y:zZ:4.~@:$#+"
+#define bbcp_VALIDOPTS (char *)"-a.AB:b:C:c.d:DeE:fFghi:I:j:kKl:L:m:nN:oOpP:q:rR.s:S:t:T:u:U:vVw:W:x:y:zZ:4.~@:$#+"
 #define bbcp_SSOPTIONS bbcp_VALIDOPTS "MH:Y:"
 
 #define Hmsg1(a)   {bbcp_Fmsg("Config", a);    help(1);}
@@ -404,6 +405,11 @@ void bbcp_Config::Arguments(int argc, char** argv, int cfgfd)
                 if (inFN)
                     free(inFN);
                 inFN = strdup(arglist.argval);
+                break;
+            case 'j':
+                if (a2n("listenRetries", arglist.argval,
+                        ListenRetries, 1, BBCP_MAXLISTENS))
+                    Cleanup(1, argv[0], cfgfd);
                 break;
             case 'k':
                 Options |= bbcp_KEEP | bbcp_ORDER;
@@ -891,7 +897,7 @@ void bbcp_Config::help(int rc)
 {
     H("Usage:   bbcp [Options] [Inspec] Outspec")
     I("Options: [-a [dir]] [-A] [-b [+]bf] [-B bsz] [-c [lvl]] [-C cfn] [-D] [-d path]")
-    H("         [-e] [-E csa] [-f] [-F] [-g] [-h] [-i idfn] [-I slfn] [-k] [-K]")
+    H("         [-e] [-E csa] [-f] [-F] [-g] [-h] [-i idfn] [-I slfn] [-j snum] [-k] [-K]")
     H("         [-L opts[@logurl]] [-l logf] [-m mode] [-n] [-N nio] [-o] [-O] [-p]")
     H("         [-P sec] [-r] [-R [args]] [-q qos] [-s snum] [-S srcxeq] [-T trgxeq]")
     H("         [-t sec] [-v] [-V] [-u loc] [-U wsz] [-w [=]wsz] [-x rate] [-y] [-z]")
@@ -919,6 +925,7 @@ void bbcp_Config::help(int rc)
     H("-i idfn is the name of the ssh identify file for source and target.")
     H("-I slfn is the name of the file that holds the list of files to be copied.")
     H("        With -I no source files need be specified on the command line.")
+    H("-j snum The number of retries when listening for socket connnections. (default is 8, max is 1024)")
     H("-k      keep the destination file even when the copy fails.")
     H("-K      do not rm the file when -f specified, only truncate it.")
     H("-l logf logs standard error to the specified file.")
@@ -1237,6 +1244,11 @@ void bbcp_Config::Config_Ctl(int rwbsz)
     Add_Opt('g');
     if (Options & bbcp_KEEP)
     Add_Opt('k');
+    if (ListenRetries)
+    {
+        Add_Opt('j');
+        Add_Num(ListenRetries);
+    }
     if (Options & bbcp_NOUNLINK)
     Add_Opt('K');
     if (LogSpec)
@@ -2040,6 +2052,8 @@ void bbcp_Config::setOpts(bbcp_Args& Args)
     Args.Option("infiles", 2, 'I', ':');
     Args.Option("ipv4", 4, '4', '.');
     Args.Option("keep", 1, 'k', 0);
+// j
+    Args.Option("listenRetries", 1, 'j', 8);
 // K
     Args.Option("license", 7, '$', 0);
     Args.Option("links", 4, '@', ':');  // synonym for --symlinks

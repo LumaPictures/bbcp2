@@ -237,11 +237,13 @@ bbcp_Link* bbcp_Network::Accept()
     return newconn;
 }
 
+#include <sstream>
+
 /******************************************************************************/
 /*                                  B i n d                                   */
 /******************************************************************************/
 
-int bbcp_Network::Bind(int minport, int maxport, int tries, int timeout)
+int bbcp_Network::Bind(int minport, int maxport, int tries, int timeout, int listenRetries)
 {
     bbcp_NetAddr InetAddr;
     const char* eText;
@@ -281,7 +283,7 @@ int bbcp_Network::Bind(int minport, int maxport, int tries, int timeout)
     if (!retc)
     {
         action = (char*)"listening on";
-        retc = listen(iofd, 8);
+        retc = listen(iofd, listenRetries);
     }
 
 // Check for any errors and return.

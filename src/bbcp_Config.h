@@ -85,6 +85,7 @@ public:
     int lastseqno;
     int TimeLimit;
     int MTLevel;
+    int ListenRetries;
 
     char* rtSpec;
     char* rtLockf;
@@ -202,7 +203,7 @@ private:
 };
 
 /******************************************************************************/
-/*                   O p t i o n   D e f i n o i t i o n s                    */
+/*                   O p t i o n   D e f i n i t i o n s                      */
 /******************************************************************************/
 
 #define bbcp_APPEND   0x0000000000000001LL
@@ -274,6 +275,7 @@ private:
 #define bbcp_RXONLY   0x0040000000000000LL
 
 #define BBCP_MAXSTREAMS 64
+#define BBCP_MAXLISTENS 1024
 #define BBCP_MINPMONSEC  1
 
 #define BBCP_DFLTMINPORT 5031
