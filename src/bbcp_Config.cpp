@@ -283,7 +283,7 @@ void bbcp_Config::Arguments(int argc, char** argv, int cfgfd)
     int n = 0, retc, xTrace = 1, infiles = 0, notctl = 0, rwbsz = 0;
     int mspec = 0, isProg = 0;
     char* Slash, * inFN = 0, c, cbhname[MAXHOSTNAMELEN + 1];
-    bbcp_Args arglist((char*)"bbcp: ");
+    bbcp_Args arglist((char*)"bbcp2: ");
     bool warnIPV = false;
 
 // Make sure we have at least one argument

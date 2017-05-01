@@ -313,7 +313,7 @@ bool bbcp_FS_Pipe::Validate(const char* pgm)
 //
     if (!(*aList) || !strcmp(aList, "0"))
     {
-        cerr << "bbcp: " << bbcp_HostName << " disallows program pipes." << endl;
+        cerr << "bbcp2: " << bbcp_HostName << " disallows program pipes." << endl;
         errno = EPERM;
         return false;
     }
@@ -341,7 +341,7 @@ bool bbcp_FS_Pipe::Validate(const char* pgm)
 // This program is not allowed
 //
     free(xList);
-    cerr << "bbcp: " << bbcp_HostName << " disallows " << pgm
+    cerr << "bbcp2: " << bbcp_HostName << " disallows " << pgm
          << " as a program pipe." << endl;
     errno = EPERM;
     return false;

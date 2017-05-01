@@ -119,11 +119,11 @@ void bbcp_ProgMon::Monitor()
         else
             etime.Format(tbuff);
         if (bewordy)
-            sprintf(buff, "bbcp: %s %s done; %.1f %sB/s, "
+            sprintf(buff, "bbcp2: %s %s done; %.1f %sB/s, "
                         "avg %.1f %sB/s%s\n",
                     tbuff, pbuff, xfrtnow, xaXB, xfrtime, xtXB, cxip);
         else
-            sprintf(buff, "bbcp: %s %s done; %.1f %sB/s%s\n",
+            sprintf(buff, "bbcp2: %s %s done; %.1f %sB/s%s\n",
                     tbuff, pbuff, xfrtime, xtXB, cxip);
         cerr << buff << flush;
     }
