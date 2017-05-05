@@ -49,7 +49,7 @@ bbcp_Version::bbcp_Version()
 {
     Copyright = "(c) 2002-2015 by the Board of Trustees of the Leland Stanford, Jr., University, Luma Pictures";
     Author = "Andrew Hanushevsky, Pal Mezei";
-    Version = "Version: 1.2";
+    Version = "Version: 1.2.1";
 //           0123456789
     VData = Version + 9;
 };

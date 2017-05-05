@@ -1,5 +1,5 @@
 Name:        bbcp2
-Version:     1.0
+Version:     1.2.1
 Release:     4
 Vendor:      Pal Mezei
 License:     GNU LGPL v3
