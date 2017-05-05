@@ -372,7 +372,11 @@ int bbcp_Protocol::Process_exit()
         retc = 22;
     }
     else if (bbcp_Config.a2n("return code", wp, retc, 0, 255))
+    {
+        bbcp_Fmsg("Process_exit", "unable to convert return to integer:",
+            wp);
         retc = 22;
+    }
 
 // Return to caller
 //
@@ -486,7 +490,10 @@ int bbcp_Protocol::Process_get()
     if ((wp = Remote->GetToken()))
     {
         if (bbcp_Config.a2ll("file offset", wp, foffset, 0, -1))
+        {
+            bbcp_Fmsg("Process_get", "non-integer file offset:", wp);
             return 22;
+        }
         if (foffset > fp->Info.size)
         {
             char buff[128];
