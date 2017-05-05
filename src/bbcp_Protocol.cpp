@@ -642,7 +642,7 @@ int bbcp_Protocol::Request(bbcp_Node* Node)
     {
         retc = fs_obj->MKDir(bbcp_Config.snkSpec->pathname, bbcp_Config.ModeDC);
         if (retc)
-            Request_exit(retc);
+            return Request_exit(retc);
         texists = !bbcp_Config.snkSpec->Stat(0);
         dotrim = !outDir;
         dRM = bbcp_Config.snkSpec->pathname;
