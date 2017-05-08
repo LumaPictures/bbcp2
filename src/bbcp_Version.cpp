@@ -94,16 +94,16 @@ int bbcp_Version::Verify(char* node, char* nodever)
 /******************************************************************************/
 
 const char* bbcp_License =
-    "bbcp is free software: you can redistribute it and/or modify it under\n"
+    "bbcp2 is free software: you can redistribute it and/or modify it under\n"
         "the terms of the GNU Lesser General Public License as published by the\n"
         "Free Software Foundation, either version 3 of the License, or (at your\n"
         "option) any later version.\n\n"
-        "bbcp is distributed in the hope that it will be useful, but WITHOUT\n"
+        "bbcp2 is distributed in the hope that it will be useful, but WITHOUT\n"
         "ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or\n"
         "FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public\n"
         "License for more details.\n\n"
         "You should have received a copy of the GNU Lesser General Public License\n"
-        "along with bbcp in a file called COPYING.LESSER (LGPL license) and file\n"
+        "along with bbcp2 in a file called COPYING.LESSER (LGPL license) and file\n"
         "COPYING (GPL license).  If not, see <http://www.gnu.org/licenses/>.\n\n"
         "The copyright holder's institutional names and contributor's names may not\n"
         "be used to endorse or promote products derived from this software without\n"

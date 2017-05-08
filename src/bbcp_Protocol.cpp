@@ -179,7 +179,7 @@ int bbcp_Protocol::getCBPort(bbcp_Node* Node)
 
 // Invalid response
 //
-    return bbcp_Fmsg("Protocol", "bbcp unexpectedly terminated on",
+    return bbcp_Fmsg("Protocol", "bbcp2 unexpectedly terminated on",
                      Node->NodeName());
 }
 
