@@ -290,7 +290,8 @@ int bbcp_FS_Pipe::Stat(const char* path, bbcp_FileInfo* sbuff)
     sbuff->mtime = sbuff->atime;
     sbuff->Otype = 'f';
     sbuff->Xtype = 'x';
-    sbuff->Group = strdup("any");
+    sbuff->Group = "any";
+    sbuff->User = "any";
     return 0;
 }
 

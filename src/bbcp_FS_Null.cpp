@@ -138,6 +138,7 @@ int bbcp_FS_Null::Stat(const char* path, bbcp_FileInfo* sbuff)
 // Supply group name as "other"
 //
     sbuff->Group = "other";
+    sbuff->User = "other";
 
 // All done
 //
