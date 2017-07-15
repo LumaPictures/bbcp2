@@ -16,18 +16,19 @@ elseif (UNIX) # linux, non apple unix
     add_compile_options(-Dunix -D_BSD -DLINUX)
 endif ()
 
+if (NOT BLOSC_INCLUDE_DIR)
+    set(BLOSC_INCLUDE_DIR $ENV{BLOSC_INCLUDE_DIR})
+endif ()
+if (NOT BLOSC_STATIC_LIBRARY)
+    set(BLOSC_STATIC_LIBRARY $ENV{BLOSC_STATIC_LIBRARY})
+endif ()
+include_directories(${BLOSC_INCLUDE_DIR})
+
 add_executable(${EXEC_NAME} ${SRC})
 
 if (APPLE)
-    target_link_libraries(${EXEC_NAME} pthread z crypto)
+    target_link_libraries(${EXEC_NAME} pthread z crypto ${BLOSC_STATIC_LIBRARY})
 elseif (UNIX)
-    if (NOT BLOSC_INCLUDE_DIR)
-        set(BLOSC_INCLUDE_DIR $ENV{BLOSC_INCLUDE_DIR})
-    endif ()
-    if (NOT BLOSC_STATIC_LIBRARY)
-        set(BLOSC_STATIC_LIBRARY $ENV{BLOSC_STATIC_LIBRARY})
-    endif ()
-    include_directories(${BLOSC_INCLUDE_DIR})
     target_link_libraries(${EXEC_NAME} nsl pthread rt z crypto ${BLOSC_STATIC_LIBRARY})
 endif ()
 
